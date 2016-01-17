@@ -30,6 +30,7 @@ define(['exports', './authUtils'], function (exports, _authUtils) {
       _classCallCheck(this, BaseConfig);
 
       this._current = {
+        authMethod: 'jwt',
         httpInterceptor: true,
         loginOnSignup: true,
         baseUrl: null,
@@ -43,6 +44,7 @@ define(['exports', './authUtils'], function (exports, _authUtils) {
         signupRoute: '/signup',
         tokenRoot: false,
         tokenName: 'token',
+        tokenNames: ['access-token', 'expiry', 'token-type', 'uid', 'client'],
         tokenPrefix: 'aurelia',
         responseTokenProp: 'access_token',
         unlinkUrl: '/auth/unlink/',

@@ -29,6 +29,7 @@ System.register(['./authUtils'], function (_export) {
           _classCallCheck(this, BaseConfig);
 
           this._current = {
+            authMethod: 'jwt',
             httpInterceptor: true,
             loginOnSignup: true,
             baseUrl: null,
@@ -42,6 +43,7 @@ System.register(['./authUtils'], function (_export) {
             signupRoute: '/signup',
             tokenRoot: false,
             tokenName: 'token',
+            tokenNames: ['access-token', 'expiry', 'token-type', 'uid', 'client'],
             tokenPrefix: 'aurelia',
             responseTokenProp: 'access_token',
             unlinkUrl: '/auth/unlink/',

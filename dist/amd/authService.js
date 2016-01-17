@@ -92,8 +92,11 @@ define(['exports', 'aurelia-framework', './authentication', './baseConfig', './o
         }
 
         return this.rest.post(loginUrl, content).then(function (response) {
-          _this2.auth.setTokenFromResponse(response);
-
+          if (!_this2.auth.isTokenAuthEnabled()) {
+            _this2.auth.setTokenFromResponse(response);
+          } else {
+            _this2.auth.redirectAfterLogin();
+          }
           return response;
         });
       }

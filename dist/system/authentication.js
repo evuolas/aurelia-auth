@@ -24,7 +24,9 @@ System.register(['aurelia-framework', './baseConfig', './storage', './authUtils'
 
           this.storage = storage;
           this.config = config.current;
+          this.authMethod = this.config.authMethod;
           this.tokenName = this.config.tokenPrefix ? this.config.tokenPrefix + '_' + this.config.tokenName : this.config.tokenName;
+          this.tokenNames = this.config.tokenNames;
         }
 
         _createClass(Authentication, [{
@@ -69,6 +71,11 @@ System.register(['aurelia-framework', './baseConfig', './storage', './authUtils'
             }
           }
         }, {
+          key: 'isTokenAuthEnabled',
+          value: function isTokenAuthEnabled() {
+            return this.authMethod === 'token';
+          }
+        }, {
           key: 'setTokenFromResponse',
           value: function setTokenFromResponse(response, redirect) {
             var tokenName = this.tokenName;
@@ -95,6 +102,29 @@ System.register(['aurelia-framework', './baseConfig', './storage', './authUtils'
 
             this.storage.set(tokenName, token);
 
+            this.redirectAfterLogin(redirect);
+          }
+        }, {
+          key: 'setTokensFromHeaders',
+          value: function setTokensFromHeaders(headers) {
+            var tokenNames = this.tokenNames;
+
+            if (authUtils.isArray(tokenNames)) {
+              for (var i = 0; i < tokenNames.length; i++) {
+                var key = tokenNames[i];
+                var value = headers.get(key);
+
+                if (value) {
+                  this.storage.set(key, value);
+                }
+              }
+            } else {
+              this.storage.set(this.tokenName, headers.get(tokenName));
+            }
+          }
+        }, {
+          key: 'redirectAfterLogin',
+          value: function redirectAfterLogin(redirect) {
             if (this.config.loginRedirect && !redirect) {
               window.location.href = this.config.loginRedirect;
             } else if (redirect && authUtils.isString(redirect)) {
@@ -109,6 +139,17 @@ System.register(['aurelia-framework', './baseConfig', './storage', './authUtils'
         }, {
           key: 'isAuthenticated',
           value: function isAuthenticated() {
+            var _this = this;
+
+            if (this.isTokenAuthEnabled()) {
+              var authenticated = true;
+              authUtils.forEach(this.tokenNames, function (name) {
+                var value = _this.storage.get(name);
+                authenticated = authenticated && value && value !== 'null';
+              });
+              return authenticated;
+            }
+
             var token = this.storage.get(this.tokenName);
 
             if (!token) {
@@ -132,13 +173,19 @@ System.register(['aurelia-framework', './baseConfig', './storage', './authUtils'
         }, {
           key: 'logout',
           value: function logout(redirect) {
-            var _this = this;
+            var _this2 = this;
 
             return new Promise(function (resolve) {
-              _this.storage.remove(_this.tokenName);
+              if (_this2.isTokenAuthEnabled()) {
+                authUtils.forEach(_this2.tokenNames, function (name) {
+                  _this2.storage.remove(name);
+                });
+              } else {
+                _this2.storage.remove(_this2.tokenName);
+              }
 
-              if (_this.config.logoutRedirect && !redirect) {
-                window.location.href = _this.config.logoutRedirect;
+              if (_this2.config.logoutRedirect && !redirect) {
+                window.location.href = _this2.config.logoutRedirect;
               } else if (authUtils.isString(redirect)) {
                 window.location.href = redirect;
               }

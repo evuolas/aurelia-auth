@@ -11,6 +11,7 @@ export class BaseConfig {
 
   constructor() {
     this._current = {
+      authMethod: 'jwt', // 'token' to use with devise_token_auth
       httpInterceptor: true,
       loginOnSignup: true,
       baseUrl: null,
@@ -24,6 +25,7 @@ export class BaseConfig {
       signupRoute: '/signup',
       tokenRoot: false,
       tokenName: 'token',
+      tokenNames: ['access-token', 'expiry', 'token-type', 'uid', 'client'], // Used when authMethod === 'token'
       tokenPrefix: 'aurelia',
       responseTokenProp: 'access_token',
       unlinkUrl: '/auth/unlink/',

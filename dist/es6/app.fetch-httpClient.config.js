@@ -3,6 +3,7 @@ import {Authentication} from './authentication';
 import {BaseConfig} from './baseConfig';
 import {inject} from 'aurelia-framework';
 import {Storage} from './storage';
+import authUtils from './authUtils';
 
 @inject(HttpClient, Authentication, Storage, BaseConfig)
 export class FetchConfig {
@@ -25,19 +26,36 @@ export class FetchConfig {
         .withInterceptor({
           request(request) {
             if (auth.isAuthenticated() && config.httpInterceptor) {
-              let tokenName = config.tokenPrefix ? `${config.tokenPrefix}_${config.tokenName}` : config.tokenName;
-              let token     = storage.get(tokenName);
+              if (auth.isTokenAuthEnabled()) {
+                authUtils.forEach(config.tokenNames, tokenName => {
+                  let value = storage.get(tokenName);
+                  request.headers.append(tokenName, value);
+                });
+              } else {
+                let tokenName = config.tokenPrefix ? `${config.tokenPrefix}_${config.tokenName}` : config.tokenName;
+                let token     = storage.get(tokenName);
 
-              if (config.authHeader && config.authToken) {
-                token = `${config.authToken} ${token}`;
+                if (config.authHeader && config.authToken) {
+                  token = `${config.authToken} ${token}`;
+                }
+
+                request.headers.append(config.authHeader, token);
               }
-
-              request.headers.append(config.authHeader, token);
             }
 
             return request;
           }
+        })
+        .withInterceptor({
+          response(response) {
+            if (auth.isTokenAuthEnabled()) {
+              auth.setTokensFromHeaders(response.headers);
+            }
+
+            return response;
+          }
         });
+
     });
   }
 }

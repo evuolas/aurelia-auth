@@ -31,6 +31,7 @@ var BaseConfig = (function () {
     _classCallCheck(this, BaseConfig);
 
     this._current = {
+      authMethod: 'jwt',
       httpInterceptor: true,
       loginOnSignup: true,
       baseUrl: null,
@@ -44,6 +45,7 @@ var BaseConfig = (function () {
       signupRoute: '/signup',
       tokenRoot: false,
       tokenName: 'token',
+      tokenNames: ['access-token', 'expiry', 'token-type', 'uid', 'client'],
       tokenPrefix: 'aurelia',
       responseTokenProp: 'access_token',
       unlinkUrl: '/auth/unlink/',

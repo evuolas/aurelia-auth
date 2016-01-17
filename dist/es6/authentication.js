@@ -8,7 +8,9 @@ export class Authentication {
   constructor(storage, config) {
     this.storage   = storage;
     this.config    = config.current;
+    this.authMethod = this.config.authMethod;
     this.tokenName = this.config.tokenPrefix ? this.config.tokenPrefix + '_' + this.config.tokenName : this.config.tokenName;
+    this.tokenNames = this.config.tokenNames;
   }
 
   getLoginRoute() {
@@ -45,6 +47,10 @@ export class Authentication {
     }
   }
 
+  isTokenAuthEnabled() {
+    return this.authMethod === 'token';
+  }
+
   setTokenFromResponse(response, redirect) {
     let tokenName   = this.tokenName;
     let accessToken = response && response[this.config.responseTokenProp];
@@ -70,6 +76,27 @@ export class Authentication {
 
     this.storage.set(tokenName, token);
 
+    this.redirectAfterLogin(redirect);
+  }
+
+  setTokensFromHeaders(headers) {
+    let tokenNames = this.tokenNames;
+
+    if (authUtils.isArray(tokenNames)) {
+      for (var i = 0; i < tokenNames.length; i++) {
+        let key = tokenNames[i];
+        let value = headers.get(key);
+
+        if (value) {
+          this.storage.set(key, value);
+        }
+      }
+    } else {
+      this.storage.set(this.tokenName, headers.get(tokenName));
+    }
+  }
+
+  redirectAfterLogin(redirect) {
     if (this.config.loginRedirect && !redirect) {
       window.location.href = this.config.loginRedirect;
     } else if (redirect && authUtils.isString(redirect)) {
@@ -82,6 +109,15 @@ export class Authentication {
   }
 
   isAuthenticated() {
+    if (this.isTokenAuthEnabled()) {
+      var authenticated = true;
+      authUtils.forEach(this.tokenNames, name => {
+        let value = this.storage.get(name);
+        authenticated = (authenticated && value && value !== 'null');
+      });
+      return authenticated;
+    }
+
     let token = this.storage.get(this.tokenName);
 
     // There's no token, so user is not authenticated.
@@ -107,7 +143,13 @@ export class Authentication {
 
   logout(redirect) {
     return new Promise(resolve => {
-      this.storage.remove(this.tokenName);
+      if (this.isTokenAuthEnabled()) {
+        authUtils.forEach(this.tokenNames, name => {
+          this.storage.remove(name);
+        })
+      } else {
+        this.storage.remove(this.tokenName);
+      }
 
       if (this.config.logoutRedirect && !redirect) {
         window.location.href = this.config.logoutRedirect;

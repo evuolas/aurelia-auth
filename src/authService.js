@@ -73,8 +73,11 @@ export class AuthService {
 
     return this.rest.post(loginUrl, content)
       .then(response => {
-        this.auth.setTokenFromResponse(response);
-
+        if (!this.auth.isTokenAuthEnabled()) {
+          this.auth.setTokenFromResponse(response);
+        } else {
+          this.auth.redirectAfterLogin();
+        }
         return response;
       });
   }

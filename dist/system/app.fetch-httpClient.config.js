@@ -1,7 +1,7 @@
-System.register(['aurelia-fetch-client', './authentication', './baseConfig', 'aurelia-framework', './storage'], function (_export) {
+System.register(['aurelia-fetch-client', './authentication', './baseConfig', 'aurelia-framework', './storage', './authUtils'], function (_export) {
   'use strict';
 
-  var HttpClient, Authentication, BaseConfig, inject, Storage, FetchConfig;
+  var HttpClient, Authentication, BaseConfig, inject, Storage, authUtils, FetchConfig;
 
   var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
 
@@ -18,6 +18,8 @@ System.register(['aurelia-fetch-client', './authentication', './baseConfig', 'au
       inject = _aureliaFramework.inject;
     }, function (_storage) {
       Storage = _storage.Storage;
+    }, function (_authUtils) {
+      authUtils = _authUtils['default'];
     }],
     execute: function () {
       FetchConfig = (function () {
@@ -42,17 +44,32 @@ System.register(['aurelia-fetch-client', './authentication', './baseConfig', 'au
               httpConfig.withBaseUrl(baseUrl).withInterceptor({
                 request: function request(_request) {
                   if (auth.isAuthenticated() && config.httpInterceptor) {
-                    var tokenName = config.tokenPrefix ? config.tokenPrefix + '_' + config.tokenName : config.tokenName;
-                    var token = storage.get(tokenName);
+                    if (auth.isTokenAuthEnabled()) {
+                      authUtils.forEach(config.tokenNames, function (tokenName) {
+                        var value = storage.get(tokenName);
+                        _request.headers.append(tokenName, value);
+                      });
+                    } else {
+                      var tokenName = config.tokenPrefix ? config.tokenPrefix + '_' + config.tokenName : config.tokenName;
+                      var token = storage.get(tokenName);
 
-                    if (config.authHeader && config.authToken) {
-                      token = config.authToken + ' ' + token;
+                      if (config.authHeader && config.authToken) {
+                        token = config.authToken + ' ' + token;
+                      }
+
+                      _request.headers.append(config.authHeader, token);
                     }
-
-                    _request.headers.append(config.authHeader, token);
                   }
 
                   return _request;
+                }
+              }).withInterceptor({
+                response: function response(_response) {
+                  if (auth.isTokenAuthEnabled()) {
+                    auth.setTokensFromHeaders(_response.headers);
+                  }
+
+                  return _response;
                 }
               });
             });
