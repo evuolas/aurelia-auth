@@ -19,6 +19,12 @@ System.register(['aurelia-framework', './baseConfig', './storage', './authUtils'
     }],
     execute: function () {
       Authentication = (function () {
+        _createClass(Authentication, null, [{
+          key: '__isAuthenticated',
+          value: false,
+          enumerable: true
+        }]);
+
         function Authentication(storage, config) {
           _classCallCheck(this, _Authentication);
 
@@ -48,6 +54,11 @@ System.register(['aurelia-framework', './baseConfig', './storage', './authUtils'
           key: 'getSignupUrl',
           value: function getSignupUrl() {
             return this.config.baseUrl ? authUtils.joinUrl(this.config.baseUrl, this.config.signupUrl) : this.config.signupUrl;
+          }
+        }, {
+          key: 'getValidateTokenUrl',
+          value: function getValidateTokenUrl() {
+            return this.config.baseUrl ? authUtils.joinUrl(this.config.baseUrl, this.config.validateTokenUrl) : this.config.validateTokenUrl;
           }
         }, {
           key: 'getProfileUrl',
@@ -132,19 +143,38 @@ System.register(['aurelia-framework', './baseConfig', './storage', './authUtils'
             }
           }
         }, {
+          key: 'redirectAfterLogout',
+          value: function redirectAfterLogout(redirect) {
+            if (this.config.logoutRedirect && !redirect) {
+              window.location.href = this.config.logoutRedirect;
+            } else if (authUtils.isString(redirect)) {
+              window.location.href = redirect;
+            }
+          }
+        }, {
           key: 'removeToken',
           value: function removeToken() {
             this.storage.remove(this.tokenName);
           }
         }, {
+          key: 'removeTokens',
+          value: function removeTokens() {
+            var _this = this;
+
+            this.tokenNames.forEach(function (tokenName) {
+              _this.storage.remove(tokenName);
+            });
+          }
+        }, {
           key: 'isAuthenticated',
           value: function isAuthenticated() {
-            var _this = this;
+            var _this2 = this;
 
             if (this.isTokenAuthEnabled()) {
               var authenticated = true;
+
               authUtils.forEach(this.tokenNames, function (name) {
-                var value = _this.storage.get(name);
+                var value = _this2.storage.get(name);
                 authenticated = authenticated && value && value !== 'null';
               });
 
@@ -178,22 +208,18 @@ System.register(['aurelia-framework', './baseConfig', './storage', './authUtils'
         }, {
           key: 'logout',
           value: function logout(redirect) {
-            var _this2 = this;
+            var _this3 = this;
 
             return new Promise(function (resolve) {
-              if (_this2.isTokenAuthEnabled()) {
-                authUtils.forEach(_this2.tokenNames, function (name) {
-                  _this2.storage.remove(name);
+              if (_this3.isTokenAuthEnabled()) {
+                authUtils.forEach(_this3.tokenNames, function (name) {
+                  _this3.storage.remove(name);
                 });
               } else {
-                _this2.storage.remove(_this2.tokenName);
+                _this3.storage.remove(_this3.tokenName);
               }
 
-              if (_this2.config.logoutRedirect && !redirect) {
-                window.location.href = _this2.config.logoutRedirect;
-              } else if (authUtils.isString(redirect)) {
-                window.location.href = redirect;
-              }
+              _this3.redirectAfterLogout();
 
               resolve();
             });

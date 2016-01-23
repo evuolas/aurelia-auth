@@ -27,6 +27,12 @@ var _authUtils2 = _interopRequireDefault(_authUtils);
 var _aureliaApi = require('aurelia-api');
 
 var AuthService = (function () {
+  _createClass(AuthService, null, [{
+    key: '__tokenValidated',
+    value: false,
+    enumerable: true
+  }]);
+
   function AuthService(rest, auth, oAuth1, oAuth2, config) {
     _classCallCheck(this, _AuthService);
 
@@ -55,7 +61,13 @@ var AuthService = (function () {
   }, {
     key: 'isAuthenticated',
     value: function isAuthenticated() {
-      return this.auth.isAuthenticated();
+      var autheticated = this.auth.isAuthenticated();
+
+      if (authenticated && this.auth.isTokenAuthEnabled() && !this.__tokenValidated) {
+        return this.validateToken();
+      }
+
+      return autheticated;
     }
   }, {
     key: 'getTokenPayload',
@@ -108,6 +120,7 @@ var AuthService = (function () {
         if (!_this2.auth.isTokenAuthEnabled()) {
           _this2.auth.setTokenFromResponse(response);
         } else {
+          _this2.__tokenValidated = true;
           _this2.auth.redirectAfterLogin();
         }
         return response;
@@ -119,9 +132,27 @@ var AuthService = (function () {
       return this.auth.logout(redirectUri);
     }
   }, {
+    key: 'validateToken',
+    value: function validateToken() {
+      var _this3 = this;
+
+      var url = this.auth.getValidateTokenUrl();
+
+      return this.rest.find(url).then(function (response) {
+        console.log("AUTH ?=");
+        _this3.auth.__isAuthenticated = true;
+        _this3.__tokenValidated = true;
+        return _this3.auth.isAuthenticated();
+      })['catch'](function (err) {
+        _this3.auth.removeTokens();
+        _this3.auth.__isAuthenticated = false;
+        _this3.auth.redirectAfterLogout();
+      });
+    }
+  }, {
     key: 'authenticate',
     value: function authenticate(name, redirect, userData) {
-      var _this3 = this;
+      var _this4 = this;
 
       var provider = this.oAuth2;
       if (this.config.providers[name].type === '1.0') {
@@ -129,7 +160,7 @@ var AuthService = (function () {
       }
 
       return provider.open(this.config.providers[name], userData || {}).then(function (response) {
-        _this3.auth.setTokenFromResponse(response, redirect);
+        _this4.auth.setTokenFromResponse(response, redirect);
         return response;
       });
     }

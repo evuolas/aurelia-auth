@@ -8,6 +8,8 @@ import {Rest} from 'aurelia-api';
 
 @inject(Rest, Authentication, OAuth1, OAuth2, BaseConfig)
 export class AuthService {
+  static __tokenValidated = false;
+
   constructor(rest, auth, oAuth1, oAuth2, config) {
     this.rest   = rest;
     this.auth   = auth;
@@ -28,7 +30,13 @@ export class AuthService {
   }
 
   isAuthenticated() {
-    return this.auth.isAuthenticated();
+    let autheticated = this.auth.isAuthenticated();
+
+    if (authenticated && this.auth.isTokenAuthEnabled() && !this.__tokenValidated) {
+      return this.validateToken();
+    }
+
+    return autheticated;
   }
 
   getTokenPayload() {
@@ -76,6 +84,7 @@ export class AuthService {
         if (!this.auth.isTokenAuthEnabled()) {
           this.auth.setTokenFromResponse(response);
         } else {
+          this.__tokenValidated = true;
           this.auth.redirectAfterLogin();
         }
         return response;
@@ -84,6 +93,23 @@ export class AuthService {
 
   logout(redirectUri) {
     return this.auth.logout(redirectUri);
+  }
+
+  validateToken() {
+    let url = this.auth.getValidateTokenUrl();
+
+    return this.rest.find(url)
+      .then(response => {
+        console.log("AUTH ?=")
+        this.auth.__isAuthenticated = true;
+        this.__tokenValidated = true;
+        return this.auth.isAuthenticated();
+      })
+      .catch(err => {
+        this.auth.removeTokens();
+        this.auth.__isAuthenticated = false;
+        this.auth.redirectAfterLogout();
+      });
   }
 
   authenticate(name, redirect, userData) {

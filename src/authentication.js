@@ -5,6 +5,8 @@ import authUtils from './authUtils';
 
 @inject(Storage, BaseConfig)
 export class Authentication {
+  static __isAuthenticated = false;
+
   constructor(storage, config) {
     this.storage   = storage;
     this.config    = config.current;
@@ -27,6 +29,10 @@ export class Authentication {
 
   getSignupUrl() {
     return this.config.baseUrl ? authUtils.joinUrl(this.config.baseUrl, this.config.signupUrl) : this.config.signupUrl;
+  }
+
+  getValidateTokenUrl() {
+    return this.config.baseUrl ? authUtils.joinUrl(this.config.baseUrl, this.config.validateTokenUrl) : this.config.validateTokenUrl;
   }
 
   getProfileUrl() {
@@ -104,13 +110,28 @@ export class Authentication {
     }
   }
 
+  redirectAfterLogout(redirect) {
+    if (this.config.logoutRedirect && !redirect) {
+      window.location.href = this.config.logoutRedirect;
+    } else if (authUtils.isString(redirect)) {
+      window.location.href = redirect;
+    }
+  }
+
   removeToken() {
     this.storage.remove(this.tokenName);
+  }
+
+  removeTokens() {
+    this.tokenNames.forEach(tokenName => {
+      this.storage.remove(tokenName);
+    });
   }
 
   isAuthenticated() {
     if (this.isTokenAuthEnabled()) {
       var authenticated = true;
+
       authUtils.forEach(this.tokenNames, name => {
         let value = this.storage.get(name);
         authenticated = (authenticated && value && value !== 'null');
@@ -156,11 +177,7 @@ export class Authentication {
         this.storage.remove(this.tokenName);
       }
 
-      if (this.config.logoutRedirect && !redirect) {
-        window.location.href = this.config.logoutRedirect;
-      } else if (authUtils.isString(redirect)) {
-        window.location.href = redirect;
-      }
+      this.redirectAfterLogout();
 
       resolve();
     });
