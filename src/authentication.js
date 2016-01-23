@@ -115,6 +115,8 @@ export class Authentication {
         let value = this.storage.get(name);
         authenticated = (authenticated && value && value !== 'null');
       });
+
+      this.__isAuthenticated = authenticated;
       return authenticated;
     }
 
@@ -122,11 +124,13 @@ export class Authentication {
 
     // There's no token, so user is not authenticated.
     if (!token) {
+      this.__isAuthenticated = false;
       return false;
     }
 
     // There is a token, but in a different format. Return true.
     if (token.split('.').length !== 3) {
+      this.__isAuthenticated = true;
       return true;
     }
 
@@ -138,6 +142,7 @@ export class Authentication {
       return Math.round(new Date().getTime() / 1000) <= exp;
     }
 
+    this.__isAuthenticated = true;
     return true;
   }
 

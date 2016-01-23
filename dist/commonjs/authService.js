@@ -24,7 +24,7 @@ var _authUtils = require('./authUtils');
 
 var _authUtils2 = _interopRequireDefault(_authUtils);
 
-var _spoonxAureliaApi = require('spoonx/aurelia-api');
+var _aureliaApi = require('aurelia-api');
 
 var AuthService = (function () {
   function AuthService(rest, auth, oAuth1, oAuth2, config) {
@@ -147,7 +147,7 @@ var AuthService = (function () {
   }]);
 
   var _AuthService = AuthService;
-  AuthService = (0, _aureliaFramework.inject)(_spoonxAureliaApi.Rest, _authentication.Authentication, _oAuth1.OAuth1, _oAuth2.OAuth2, _baseConfig.BaseConfig)(AuthService) || AuthService;
+  AuthService = (0, _aureliaFramework.inject)(_aureliaApi.Rest, _authentication.Authentication, _oAuth1.OAuth1, _oAuth2.OAuth2, _baseConfig.BaseConfig)(AuthService) || AuthService;
   return AuthService;
 })();
 

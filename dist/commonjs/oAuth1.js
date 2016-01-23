@@ -22,7 +22,7 @@ var _popup = require('./popup');
 
 var _baseConfig = require('./baseConfig');
 
-var _spoonxAureliaApi = require('spoonx/aurelia-api');
+var _aureliaApi = require('aurelia-api');
 
 var OAuth1 = (function () {
   function OAuth1(storage, popup, rest, config) {
@@ -89,7 +89,7 @@ var OAuth1 = (function () {
   }]);
 
   var _OAuth1 = OAuth1;
-  OAuth1 = (0, _aureliaFramework.inject)(_storage.Storage, _popup.Popup, _spoonxAureliaApi.Rest, _baseConfig.BaseConfig)(OAuth1) || OAuth1;
+  OAuth1 = (0, _aureliaFramework.inject)(_storage.Storage, _popup.Popup, _aureliaApi.Rest, _baseConfig.BaseConfig)(OAuth1) || OAuth1;
   return OAuth1;
 })();
 

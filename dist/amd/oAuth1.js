@@ -1,4 +1,4 @@
-define(['exports', 'aurelia-framework', './authUtils', './storage', './popup', './baseConfig', 'spoonx/aurelia-api'], function (exports, _aureliaFramework, _authUtils, _storage, _popup, _baseConfig, _spoonxAureliaApi) {
+define(['exports', 'aurelia-framework', './authUtils', './storage', './popup', './baseConfig', 'aurelia-api'], function (exports, _aureliaFramework, _authUtils, _storage, _popup, _baseConfig, _aureliaApi) {
   'use strict';
 
   Object.defineProperty(exports, '__esModule', {
@@ -78,7 +78,7 @@ define(['exports', 'aurelia-framework', './authUtils', './storage', './popup', '
     }]);
 
     var _OAuth1 = OAuth1;
-    OAuth1 = (0, _aureliaFramework.inject)(_storage.Storage, _popup.Popup, _spoonxAureliaApi.Rest, _baseConfig.BaseConfig)(OAuth1) || OAuth1;
+    OAuth1 = (0, _aureliaFramework.inject)(_storage.Storage, _popup.Popup, _aureliaApi.Rest, _baseConfig.BaseConfig)(OAuth1) || OAuth1;
     return OAuth1;
   })();
 

@@ -149,16 +149,20 @@ var Authentication = (function () {
           var value = _this.storage.get(name);
           authenticated = authenticated && value && value !== 'null';
         });
+
+        this.__isAuthenticated = authenticated;
         return authenticated;
       }
 
       var token = this.storage.get(this.tokenName);
 
       if (!token) {
+        this.__isAuthenticated = false;
         return false;
       }
 
       if (token.split('.').length !== 3) {
+        this.__isAuthenticated = true;
         return true;
       }
 
@@ -170,6 +174,7 @@ var Authentication = (function () {
         return Math.round(new Date().getTime() / 1000) <= exp;
       }
 
+      this.__isAuthenticated = true;
       return true;
     }
   }, {

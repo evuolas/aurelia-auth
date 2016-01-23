@@ -3,7 +3,7 @@ import authUtils from './authUtils';
 import {Storage} from './storage';
 import {Popup} from './popup';
 import {BaseConfig} from './baseConfig';
-import {Rest} from 'spoonx/aurelia-api';
+import {Rest} from 'aurelia-api';
 
 @inject(Storage, Popup, Rest, BaseConfig)
 export class OAuth1 {
