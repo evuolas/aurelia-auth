@@ -1,4 +1,4 @@
-System.register(['aurelia-framework', './authUtils', './storage', './popup', './baseConfig', 'spoonx/aurelia-api'], function (_export) {
+System.register(['aurelia-framework', './authUtils', './storage', './popup', './baseConfig', 'aurelia-api'], function (_export) {
   'use strict';
 
   var inject, authUtils, Storage, Popup, BaseConfig, Rest, OAuth2;
@@ -18,8 +18,8 @@ System.register(['aurelia-framework', './authUtils', './storage', './popup', './
       Popup = _popup.Popup;
     }, function (_baseConfig) {
       BaseConfig = _baseConfig.BaseConfig;
-    }, function (_spoonxAureliaApi) {
-      Rest = _spoonxAureliaApi.Rest;
+    }, function (_aureliaApi) {
+      Rest = _aureliaApi.Rest;
     }],
     execute: function () {
       OAuth2 = (function () {
