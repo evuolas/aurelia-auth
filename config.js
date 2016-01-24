@@ -15,13 +15,20 @@ System.config({
   },
 
   map: {
+    "aurelia-api": "github:evuolas/aurelia-api@master",
     "aurelia-fetch-client": "npm:aurelia-fetch-client@1.0.0-beta.1.0.2",
     "aurelia-framework": "npm:aurelia-framework@1.0.0-beta.1.0.6",
     "aurelia-router": "npm:aurelia-router@1.0.0-beta.1",
     "babel": "npm:babel-core@5.8.34",
     "babel-runtime": "npm:babel-runtime@5.8.34",
     "core-js": "npm:core-js@1.2.6",
-    "spoonx/aurelia-api": "github:spoonx/aurelia-api@1.1.2",
+    "github:evuolas/aurelia-api@master": {
+      "aurelia-fetch-client": "npm:aurelia-fetch-client@1.0.0-beta.1.0.2",
+      "aurelia-framework": "npm:aurelia-framework@1.0.0-beta.1.0.6",
+      "extend": "npm:extend@3.0.0",
+      "querystring": "github:jspm/nodelibs-querystring@0.1.0",
+      "underscore": "npm:underscore@1.8.3"
+    },
     "github:jspm/nodelibs-assert@0.1.0": {
       "assert": "npm:assert@1.3.0"
     },
@@ -36,12 +43,6 @@ System.config({
     },
     "github:jspm/nodelibs-util@0.1.0": {
       "util": "npm:util@0.10.3"
-    },
-    "github:spoonx/aurelia-api@1.1.2": {
-      "aurelia-fetch-client": "npm:aurelia-fetch-client@1.0.0-beta.1.0.2",
-      "aurelia-framework": "npm:aurelia-framework@1.0.0-beta.1.0.6",
-      "extend": "npm:extend@3.0.0",
-      "querystring": "github:jspm/nodelibs-querystring@0.1.0"
     },
     "npm:assert@1.3.0": {
       "util": "npm:util@0.10.3"
