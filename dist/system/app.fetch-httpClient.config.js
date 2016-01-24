@@ -1,7 +1,7 @@
-System.register(['aurelia-fetch-client', './authentication', './baseConfig', 'aurelia-framework', './storage', './authUtils'], function (_export) {
+System.register(['aurelia-fetch-client', './authentication', './authService', './baseConfig', 'aurelia-framework', './storage', './authUtils'], function (_export) {
   'use strict';
 
-  var HttpClient, Authentication, BaseConfig, inject, Storage, authUtils, FetchConfig;
+  var HttpClient, Authentication, AuthService, BaseConfig, inject, Storage, authUtils, FetchConfig;
 
   var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
 
@@ -12,6 +12,8 @@ System.register(['aurelia-fetch-client', './authentication', './baseConfig', 'au
       HttpClient = _aureliaFetchClient.HttpClient;
     }, function (_authentication) {
       Authentication = _authentication.Authentication;
+    }, function (_authService) {
+      AuthService = _authService.AuthService;
     }, function (_baseConfig) {
       BaseConfig = _baseConfig.BaseConfig;
     }, function (_aureliaFramework) {
@@ -23,11 +25,12 @@ System.register(['aurelia-fetch-client', './authentication', './baseConfig', 'au
     }],
     execute: function () {
       FetchConfig = (function () {
-        function FetchConfig(httpClient, authService, storage, config) {
+        function FetchConfig(httpClient, authentication, authService, storage, config) {
           _classCallCheck(this, _FetchConfig);
 
           this.httpClient = httpClient;
-          this.auth = authService;
+          this.auth = authentication;
+          this.authService = authService;
           this.storage = storage;
           this.config = config.current;
         }
@@ -36,6 +39,7 @@ System.register(['aurelia-fetch-client', './authentication', './baseConfig', 'au
           key: 'configure',
           value: function configure() {
             var auth = this.auth;
+            var authService = this.authService;
             var config = this.config;
             var storage = this.storage;
             var baseUrl = this.httpClient.baseUrl;
@@ -70,6 +74,13 @@ System.register(['aurelia-fetch-client', './authentication', './baseConfig', 'au
                   }
 
                   return _response;
+                },
+                responseError: function responseError(response) {
+                  if (auth.isTokenAuthEnabled() && auth.isAuthenticated() && response.status === 401) {
+                    authService.validateToken();
+                  }
+
+                  return response;
                 }
               });
             });
@@ -77,7 +88,7 @@ System.register(['aurelia-fetch-client', './authentication', './baseConfig', 'au
         }]);
 
         var _FetchConfig = FetchConfig;
-        FetchConfig = inject(HttpClient, Authentication, Storage, BaseConfig)(FetchConfig) || FetchConfig;
+        FetchConfig = inject(HttpClient, Authentication, AuthService, Storage, BaseConfig)(FetchConfig) || FetchConfig;
         return FetchConfig;
       })();
 

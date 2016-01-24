@@ -1,4 +1,4 @@
-define(['exports', 'aurelia-fetch-client', './authentication', './baseConfig', 'aurelia-framework', './storage', './authUtils'], function (exports, _aureliaFetchClient, _authentication, _baseConfig, _aureliaFramework, _storage, _authUtils) {
+define(['exports', 'aurelia-fetch-client', './authentication', './authService', './baseConfig', 'aurelia-framework', './storage', './authUtils'], function (exports, _aureliaFetchClient, _authentication, _authService, _baseConfig, _aureliaFramework, _storage, _authUtils) {
   'use strict';
 
   Object.defineProperty(exports, '__esModule', {
@@ -14,11 +14,12 @@ define(['exports', 'aurelia-fetch-client', './authentication', './baseConfig', '
   var _authUtils2 = _interopRequireDefault(_authUtils);
 
   var FetchConfig = (function () {
-    function FetchConfig(httpClient, authService, storage, config) {
+    function FetchConfig(httpClient, authentication, authService, storage, config) {
       _classCallCheck(this, _FetchConfig);
 
       this.httpClient = httpClient;
-      this.auth = authService;
+      this.auth = authentication;
+      this.authService = authService;
       this.storage = storage;
       this.config = config.current;
     }
@@ -27,6 +28,7 @@ define(['exports', 'aurelia-fetch-client', './authentication', './baseConfig', '
       key: 'configure',
       value: function configure() {
         var auth = this.auth;
+        var authService = this.authService;
         var config = this.config;
         var storage = this.storage;
         var baseUrl = this.httpClient.baseUrl;
@@ -61,6 +63,13 @@ define(['exports', 'aurelia-fetch-client', './authentication', './baseConfig', '
               }
 
               return _response;
+            },
+            responseError: function responseError(response) {
+              if (auth.isTokenAuthEnabled() && auth.isAuthenticated() && response.status === 401) {
+                authService.validateToken();
+              }
+
+              return response;
             }
           });
         });
@@ -68,7 +77,7 @@ define(['exports', 'aurelia-fetch-client', './authentication', './baseConfig', '
     }]);
 
     var _FetchConfig = FetchConfig;
-    FetchConfig = (0, _aureliaFramework.inject)(_aureliaFetchClient.HttpClient, _authentication.Authentication, _storage.Storage, _baseConfig.BaseConfig)(FetchConfig) || FetchConfig;
+    FetchConfig = (0, _aureliaFramework.inject)(_aureliaFetchClient.HttpClient, _authentication.Authentication, _authService.AuthService, _storage.Storage, _baseConfig.BaseConfig)(FetchConfig) || FetchConfig;
     return FetchConfig;
   })();
 

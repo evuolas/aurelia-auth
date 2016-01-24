@@ -14,6 +14,8 @@ var _aureliaFetchClient = require('aurelia-fetch-client');
 
 var _authentication = require('./authentication');
 
+var _authService = require('./authService');
+
 var _baseConfig = require('./baseConfig');
 
 var _aureliaFramework = require('aurelia-framework');
@@ -25,11 +27,12 @@ var _authUtils = require('./authUtils');
 var _authUtils2 = _interopRequireDefault(_authUtils);
 
 var FetchConfig = (function () {
-  function FetchConfig(httpClient, authService, storage, config) {
+  function FetchConfig(httpClient, authentication, authService, storage, config) {
     _classCallCheck(this, _FetchConfig);
 
     this.httpClient = httpClient;
-    this.auth = authService;
+    this.auth = authentication;
+    this.authService = authService;
     this.storage = storage;
     this.config = config.current;
   }
@@ -38,6 +41,7 @@ var FetchConfig = (function () {
     key: 'configure',
     value: function configure() {
       var auth = this.auth;
+      var authService = this.authService;
       var config = this.config;
       var storage = this.storage;
       var baseUrl = this.httpClient.baseUrl;
@@ -72,6 +76,13 @@ var FetchConfig = (function () {
             }
 
             return _response;
+          },
+          responseError: function responseError(response) {
+            if (auth.isTokenAuthEnabled() && auth.isAuthenticated() && response.status === 401) {
+              authService.validateToken();
+            }
+
+            return response;
           }
         });
       });
@@ -79,7 +90,7 @@ var FetchConfig = (function () {
   }]);
 
   var _FetchConfig = FetchConfig;
-  FetchConfig = (0, _aureliaFramework.inject)(_aureliaFetchClient.HttpClient, _authentication.Authentication, _storage.Storage, _baseConfig.BaseConfig)(FetchConfig) || FetchConfig;
+  FetchConfig = (0, _aureliaFramework.inject)(_aureliaFetchClient.HttpClient, _authentication.Authentication, _authService.AuthService, _storage.Storage, _baseConfig.BaseConfig)(FetchConfig) || FetchConfig;
   return FetchConfig;
 })();
 

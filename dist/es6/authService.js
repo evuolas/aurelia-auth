@@ -100,12 +100,12 @@ export class AuthService {
 
     return this.rest.find(url)
       .then(response => {
-        console.log("AUTH ?=")
         this.auth.__isAuthenticated = true;
         this.__tokenValidated = true;
         return this.auth.isAuthenticated();
       })
       .catch(err => {
+        console.log(err);
         this.auth.removeTokens();
         this.auth.__isAuthenticated = false;
         this.auth.redirectAfterLogout();

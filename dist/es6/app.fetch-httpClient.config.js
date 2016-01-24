@@ -1,24 +1,27 @@
 import {HttpClient} from 'aurelia-fetch-client';
 import {Authentication} from './authentication';
+import {AuthService} from './authService';
 import {BaseConfig} from './baseConfig';
 import {inject} from 'aurelia-framework';
 import {Storage} from './storage';
 import authUtils from './authUtils';
 
-@inject(HttpClient, Authentication, Storage, BaseConfig)
+@inject(HttpClient, Authentication, AuthService, Storage, BaseConfig)
 export class FetchConfig {
-  constructor(httpClient, authService, storage, config) {
-    this.httpClient = httpClient;
-    this.auth       = authService;
-    this.storage    = storage;
-    this.config     = config.current;
+  constructor(httpClient, authentication, authService, storage, config) {
+    this.httpClient  = httpClient;
+    this.auth        = authentication;
+    this.authService = authService;
+    this.storage     = storage;
+    this.config      = config.current;
   }
 
   configure() {
-    let auth    = this.auth;
-    let config  = this.config;
-    let storage = this.storage;
-    let baseUrl = this.httpClient.baseUrl;
+    let auth        = this.auth;
+    let authService = this.authService;
+    let config      = this.config;
+    let storage     = this.storage;
+    let baseUrl     = this.httpClient.baseUrl;
 
     this.httpClient.configure(httpConfig => {
       httpConfig
@@ -50,6 +53,13 @@ export class FetchConfig {
           response(response) {
             if (auth.isTokenAuthEnabled()) {
               auth.setTokensFromHeaders(response.headers);
+            }
+
+            return response;
+          },
+          responseError(response) {
+            if (auth.isTokenAuthEnabled() && auth.isAuthenticated() && response.status === 401) {
+              authService.validateToken();
             }
 
             return response;

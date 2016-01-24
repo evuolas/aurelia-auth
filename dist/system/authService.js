@@ -137,11 +137,11 @@ System.register(['aurelia-framework', './authentication', './baseConfig', './oAu
             var url = this.auth.getValidateTokenUrl();
 
             return this.rest.find(url).then(function (response) {
-              console.log("AUTH ?=");
               _this3.auth.__isAuthenticated = true;
               _this3.__tokenValidated = true;
               return _this3.auth.isAuthenticated();
             })['catch'](function (err) {
+              console.log(err);
               _this3.auth.removeTokens();
               _this3.auth.__isAuthenticated = false;
               _this3.auth.redirectAfterLogout();
