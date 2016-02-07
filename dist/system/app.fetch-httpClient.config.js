@@ -69,6 +69,8 @@ System.register(['aurelia-fetch-client', './authentication', './authService', '.
                 }
               }).withInterceptor({
                 response: function response(_response) {
+                  console.log(_response);
+
                   if (auth.isTokenAuthEnabled()) {
                     auth.setTokensFromHeaders(_response.headers);
                   }

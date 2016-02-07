@@ -51,6 +51,8 @@ export class FetchConfig {
         })
         .withInterceptor({
           response(response) {
+            console.log(response);
+            
             if (auth.isTokenAuthEnabled()) {
               auth.setTokensFromHeaders(response.headers);
             }

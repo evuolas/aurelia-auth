@@ -71,6 +71,8 @@ var FetchConfig = (function () {
           }
         }).withInterceptor({
           response: function response(_response) {
+            console.log(_response);
+
             if (auth.isTokenAuthEnabled()) {
               auth.setTokensFromHeaders(_response.headers);
             }
