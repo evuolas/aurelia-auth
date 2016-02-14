@@ -30,6 +30,9 @@ System.register(['./authUtils'], function (_export) {
 
           this._current = {
             authMethod: 'jwt',
+            endpoint: null,
+            configureEndpoints: null,
+            client: null,
             httpInterceptor: true,
             loginOnSignup: true,
             baseUrl: null,

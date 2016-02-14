@@ -1,4 +1,4 @@
-import {inject} from 'aurelia-framework';
+import {inject} from 'aurelia-dependency-injection';
 import {BaseConfig}  from './baseConfig';
 import {Storage} from './storage';
 import authUtils from './authUtils';
@@ -10,9 +10,18 @@ export class Authentication {
   constructor(storage, config) {
     this.storage   = storage;
     this.config    = config.current;
-    this.authMethod = this.config.authMethod;
-    this.tokenName = this.config.tokenPrefix ? this.config.tokenPrefix + '_' + this.config.tokenName : this.config.tokenName;
-    this.tokenNames = this.config.tokenNames;
+  }
+
+  get authMethod() {
+    return this.config.authMethod;
+  }
+
+  get tokenName() {
+    return this.config.tokenPrefix ? this.config.tokenPrefix + '_' + this.config.tokenName : this.config.tokenName;
+  }
+
+  get tokenNames() {
+    return this.config.tokenNames;
   }
 
   getLoginRoute() {
@@ -49,7 +58,12 @@ export class Authentication {
     if (token && token.split('.').length === 3) {
       let base64Url = token.split('.')[1];
       let base64    = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-      return JSON.parse(decodeURIComponent(escape(window.atob(base64))));
+
+      try {
+        return JSON.parse(decodeURIComponent(escape(window.atob(base64))));
+      } catch (error) {
+        return null;
+      }
     }
   }
 
@@ -131,13 +145,13 @@ export class Authentication {
   isAuthenticated() {
     if (this.isTokenAuthEnabled()) {
       var authenticated = true;
-
       authUtils.forEach(this.tokenNames, name => {
-        let value = this.storage.get(name);
+        var value = this.storage.get(name);
         authenticated = (authenticated && value && value !== 'null');
       });
 
       this.__isAuthenticated = authenticated;
+
       return authenticated;
     }
 
@@ -157,7 +171,13 @@ export class Authentication {
 
     let base64Url = token.split('.')[1];
     let base64    = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-    let exp       = JSON.parse(window.atob(base64)).exp;
+    let exp;
+
+    try {
+      exp = JSON.parse(window.atob(base64)).exp;
+    } catch (error) {
+      return false;
+    }
 
     if (exp) {
       return Math.round(new Date().getTime() / 1000) <= exp;

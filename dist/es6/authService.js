@@ -1,32 +1,34 @@
-import {inject} from 'aurelia-framework';
+import {inject} from 'aurelia-dependency-injection';
 import {Authentication} from './authentication';
 import {BaseConfig} from './baseConfig';
 import {OAuth1} from './oAuth1';
 import {OAuth2} from './oAuth2';
 import authUtils from './authUtils';
-import {Rest} from 'aurelia-api';
 
-@inject(Rest, Authentication, OAuth1, OAuth2, BaseConfig)
+@inject(Authentication, OAuth1, OAuth2, BaseConfig)
 export class AuthService {
   static __tokenValidated = false;
 
-  constructor(rest, auth, oAuth1, oAuth2, config) {
-    this.rest   = rest;
+  constructor(auth, oAuth1, oAuth2, config) {
     this.auth   = auth;
     this.oAuth1 = oAuth1;
     this.oAuth2 = oAuth2;
     this.config = config.current;
+    this.client = this.config.client;
   }
 
-  getMe() {
-    return this.rest.find(this.auth.getProfileUrl());
-  }
-
-  updateMe(body, criteria = null) {
+  getMe(criteria) {
     if (typeof criteria === 'string' || typeof criteria === 'number') {
       criteria = {id: criteria};
     }
-    return this.rest.update(this.auth.getProfileUrl(), criteria, body);
+    return this.client.find(this.auth.getProfileUrl(), criteria);
+  }
+
+  updateMe(body, criteria) {
+    if (typeof criteria === 'string' || typeof criteria === 'number') {
+      criteria = {id: criteria};
+    }
+    return this.client.update(this.auth.getProfileUrl(), criteria, body);
   }
 
   isAuthenticated() {
@@ -55,7 +57,7 @@ export class AuthService {
         'password': password
       };
     }
-    return this.rest.post(signupUrl, content)
+    return this.client.post(signupUrl, content)
       .then(response => {
         if (this.config.loginOnSignup) {
           this.auth.setTokenFromResponse(response);
@@ -79,7 +81,7 @@ export class AuthService {
       };
     }
 
-    return this.rest.post(loginUrl, content)
+    return this.client.post(loginUrl, content)
       .then(response => {
         if (!this.auth.isTokenAuthEnabled()) {
           this.auth.setTokenFromResponse(response);
@@ -98,7 +100,7 @@ export class AuthService {
   validateToken() {
     let url = this.auth.getValidateTokenUrl();
 
-    return this.rest.find(url)
+    return this.client.find(url)
       .then(response => {
         this.auth.__isAuthenticated = true;
         this.__tokenValidated = true;
@@ -129,9 +131,9 @@ export class AuthService {
     let unlinkUrl = this.config.baseUrl ? authUtils.joinUrl(this.config.baseUrl, this.config.unlinkUrl) : this.config.unlinkUrl;
 
     if (this.config.unlinkMethod === 'get') {
-      return this.rest.find(unlinkUrl + provider);
+      return this.client.find(unlinkUrl + provider);
     } else if (this.config.unlinkMethod === 'post') {
-      return this.rest.post(unlinkUrl, provider);
+      return this.client.post(unlinkUrl, provider);
     }
   }
 }

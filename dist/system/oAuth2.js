@@ -1,15 +1,15 @@
-System.register(['aurelia-framework', './authUtils', './storage', './popup', './baseConfig', 'aurelia-api'], function (_export) {
+System.register(['aurelia-dependency-injection', './authUtils', './storage', './popup', './baseConfig'], function (_export) {
   'use strict';
 
-  var inject, authUtils, Storage, Popup, BaseConfig, Rest, OAuth2;
+  var inject, authUtils, Storage, Popup, BaseConfig, OAuth2;
 
   var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
 
   function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
 
   return {
-    setters: [function (_aureliaFramework) {
-      inject = _aureliaFramework.inject;
+    setters: [function (_aureliaDependencyInjection) {
+      inject = _aureliaDependencyInjection.inject;
     }, function (_authUtils) {
       authUtils = _authUtils['default'];
     }, function (_storage) {
@@ -18,18 +18,16 @@ System.register(['aurelia-framework', './authUtils', './storage', './popup', './
       Popup = _popup.Popup;
     }, function (_baseConfig) {
       BaseConfig = _baseConfig.BaseConfig;
-    }, function (_aureliaApi) {
-      Rest = _aureliaApi.Rest;
     }],
     execute: function () {
       OAuth2 = (function () {
-        function OAuth2(storage, popup, rest, config) {
+        function OAuth2(storage, popup, config) {
           _classCallCheck(this, _OAuth2);
 
           this.storage = storage;
           this.config = config.current;
+          this.client = this.config.client;
           this.popup = popup;
-          this.rest = rest;
           this.defaults = {
             url: null,
             name: null,
@@ -50,80 +48,81 @@ System.register(['aurelia-framework', './authUtils', './storage', './popup', './
         _createClass(OAuth2, [{
           key: 'open',
           value: function open(options, userData) {
-            authUtils.extend(this.defaults, options);
-            var stateName = this.defaults.name + '_state';
+            var _this = this;
 
-            if (authUtils.isFunction(this.defaults.state)) {
-              this.storage.set(stateName, this.defaults.state());
-            } else if (authUtils.isString(this.defaults.state)) {
-              this.storage.set(stateName, this.defaults.state);
+            var current = authUtils.extend({}, this.defaults, options);
+            var stateName = current.name + '_state';
+
+            if (authUtils.isFunction(current.state)) {
+              this.storage.set(stateName, current.state());
+            } else if (authUtils.isString(current.state)) {
+              this.storage.set(stateName, current.state);
             }
 
-            var url = this.defaults.authorizationEndpoint + '?' + this.buildQueryString();
+            var url = current.authorizationEndpoint + '?' + this.buildQueryString(current);
 
             var openPopup = undefined;
             if (this.config.platform === 'mobile') {
-              openPopup = this.popup.open(url, this.defaults.name, this.defaults.popupOptions, this.defaults.redirectUri).eventListener(this.defaults.redirectUri);
+              openPopup = this.popup.open(url, current.name, current.popupOptions, current.redirectUri).eventListener(current.redirectUri);
             } else {
-              openPopup = this.popup.open(url, this.defaults.name, this.defaults.popupOptions, this.defaults.redirectUri).pollPopup();
+              openPopup = this.popup.open(url, current.name, current.popupOptions, current.redirectUri).pollPopup();
             }
 
-            var self = this;
             return openPopup.then(function (oauthData) {
-              if (self.defaults.responseType === 'token' || self.defaults.responseType === 'id_token%20token' || self.defaults.responseType === 'token%20id_token') {
+              if (current.responseType === 'token' || current.responseType === 'id_token%20token' || current.responseType === 'token%20id_token') {
                 return oauthData;
               }
-              if (oauthData.state && oauthData.state !== self.storage.get(stateName)) {
+              if (oauthData.state && oauthData.state !== _this.storage.get(stateName)) {
                 return Promise.reject('OAuth 2.0 state parameter mismatch.');
               }
-              return self.exchangeForToken(oauthData, userData);
+              return _this.exchangeForToken(oauthData, userData, current);
             });
           }
         }, {
           key: 'exchangeForToken',
-          value: function exchangeForToken(oauthData, userData) {
+          value: function exchangeForToken(oauthData, userData, current) {
             var data = authUtils.extend({}, userData, {
               code: oauthData.code,
-              clientId: this.defaults.clientId,
-              redirectUri: this.defaults.redirectUri
+              clientId: current.clientId,
+              redirectUri: current.redirectUri
             });
 
             if (oauthData.state) {
               data.state = oauthData.state;
             }
 
-            authUtils.forEach(this.defaults.responseParams, function (param) {
-              data[param] = oauthData[param];
+            authUtils.forEach(current.responseParams, function (param) {
+              return data[param] = oauthData[param];
             });
 
-            var exchangeForTokenUrl = this.config.baseUrl ? authUtils.joinUrl(this.config.baseUrl, this.defaults.url) : this.defaults.url;
+            var exchangeForTokenUrl = this.config.baseUrl ? authUtils.joinUrl(this.config.baseUrl, current.url) : current.url;
             var credentials = this.config.withCredentials ? 'include' : 'same-origin';
 
-            return this.rest.post(exchangeForTokenUrl, data, { credentials: credentials });
+            return this.client.post(exchangeForTokenUrl, data, { credentials: credentials });
           }
         }, {
           key: 'buildQueryString',
-          value: function buildQueryString() {
-            var _this = this;
+          value: function buildQueryString(current) {
+            var _this2 = this;
 
             var keyValuePairs = [];
             var urlParams = ['defaultUrlParams', 'requiredUrlParams', 'optionalUrlParams'];
 
             authUtils.forEach(urlParams, function (params) {
-              authUtils.forEach(_this.defaults[params], function (paramName) {
+              authUtils.forEach(current[params], function (paramName) {
                 var camelizedName = authUtils.camelCase(paramName);
-                var paramValue = authUtils.isFunction(_this.defaults[paramName]) ? _this.defaults[paramName]() : _this.defaults[camelizedName];
+                var paramValue = authUtils.isFunction(current[paramName]) ? current[paramName]() : current[camelizedName];
 
                 if (paramName === 'state') {
-                  var stateName = _this.defaults.name + '_state';
-                  paramValue = encodeURIComponent(_this.storage.get(stateName));
+                  var stateName = current.name + '_state';
+                  paramValue = encodeURIComponent(_this2.storage.get(stateName));
                 }
 
                 if (paramName === 'scope' && Array.isArray(paramValue)) {
-                  paramValue = paramValue.join(_this.defaults.scopeDelimiter);
+                  paramValue = paramValue.join(current.scopeDelimiter);
 
-                  if (_this.defaults.scopePrefix) {
-                    paramValue = [_this.defaults.scopePrefix, paramValue].join(_this.defaults.scopeDelimiter);
+                  if (current.scopePrefix) {
+                    paramValue = [current.scopePrefix, paramValue].join(current.scopeDelimiter);
                   }
                 }
 
@@ -138,7 +137,7 @@ System.register(['aurelia-framework', './authUtils', './storage', './popup', './
         }]);
 
         var _OAuth2 = OAuth2;
-        OAuth2 = inject(Storage, Popup, Rest, BaseConfig)(OAuth2) || OAuth2;
+        OAuth2 = inject(Storage, Popup, BaseConfig)(OAuth2) || OAuth2;
         return OAuth2;
       })();
 

@@ -1,7 +1,7 @@
-System.register(['aurelia-fetch-client', './authentication', './authService', './baseConfig', 'aurelia-framework', './storage', './authUtils'], function (_export) {
+System.register(['aurelia-fetch-client', './authentication', './authService', './baseConfig', 'aurelia-dependency-injection', './storage', './authUtils', 'spoonx/aurelia-api'], function (_export) {
   'use strict';
 
-  var HttpClient, Authentication, AuthService, BaseConfig, inject, Storage, authUtils, FetchConfig;
+  var HttpClient, Authentication, AuthService, BaseConfig, inject, Storage, authUtils, Config, Rest, FetchConfig;
 
   var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
 
@@ -16,81 +16,123 @@ System.register(['aurelia-fetch-client', './authentication', './authService', '.
       AuthService = _authService.AuthService;
     }, function (_baseConfig) {
       BaseConfig = _baseConfig.BaseConfig;
-    }, function (_aureliaFramework) {
-      inject = _aureliaFramework.inject;
+    }, function (_aureliaDependencyInjection) {
+      inject = _aureliaDependencyInjection.inject;
     }, function (_storage) {
       Storage = _storage.Storage;
     }, function (_authUtils) {
       authUtils = _authUtils['default'];
+    }, function (_spoonxAureliaApi) {
+      Config = _spoonxAureliaApi.Config;
+      Rest = _spoonxAureliaApi.Rest;
     }],
     execute: function () {
       FetchConfig = (function () {
-        function FetchConfig(httpClient, authentication, authService, storage, config) {
+        function FetchConfig(httpClient, clientConfig, authService, storage, config) {
           _classCallCheck(this, _FetchConfig);
 
           this.httpClient = httpClient;
-          this.auth = authentication;
-          this.authService = authService;
+          this.clientConfig = clientConfig;
+          this.auth = authService;
           this.storage = storage;
           this.config = config.current;
         }
 
         _createClass(FetchConfig, [{
           key: 'configure',
-          value: function configure() {
+          value: function configure(client) {
+            var _this = this;
+
+            if (Array.isArray(client)) {
+              var _ret = (function () {
+                var configuredClients = [];
+                client.forEach(function (toConfigure) {
+                  configuredClients.push(_this.configure(toConfigure));
+                });
+
+                return {
+                  v: configuredClients
+                };
+              })();
+
+              if (typeof _ret === 'object') return _ret.v;
+            }
+
+            if (typeof client === 'string') {
+              client = this.clientConfig.getEndpoint(client).client;
+            } else if (client instanceof Rest) {
+              client = client.client;
+            } else if (!(client instanceof HttpClient)) {
+              client = this.httpClient;
+            }
+
+            client.configure(function (httpConfig) {
+              httpConfig.withBaseUrl(client.baseUrl).withInterceptor(_this.interceptor);
+
+              if (_this.auth.isTokenAuthEnabled()) {
+                httpConfig.withBaseUrl(client.baseUrl).withInterceptor(_this.tokenAuthInterceptor);
+              }
+            });
+
+            return client;
+          }
+        }, {
+          key: 'interceptor',
+          get: function get() {
             var auth = this.auth;
-            var authService = this.authService;
             var config = this.config;
             var storage = this.storage;
-            var baseUrl = this.httpClient.baseUrl;
 
-            this.httpClient.configure(function (httpConfig) {
-              httpConfig.withBaseUrl(baseUrl).withInterceptor({
-                request: function request(_request) {
-                  if (auth.isAuthenticated() && config.httpInterceptor) {
-                    if (auth.isTokenAuthEnabled()) {
-                      authUtils.forEach(config.tokenNames, function (tokenName) {
-                        var value = storage.get(tokenName);
-                        _request.headers.append(tokenName, value);
-                      });
-                    } else {
-                      var tokenName = config.tokenPrefix ? config.tokenPrefix + '_' + config.tokenName : config.tokenName;
-                      var token = storage.get(tokenName);
-
-                      if (config.authHeader && config.authToken) {
-                        token = config.authToken + ' ' + token;
-                      }
-
-                      _request.headers.append(config.authHeader, token);
-                    }
-                  }
-
+            return {
+              request: function request(_request) {
+                if (!auth.isAuthenticated() || !config.httpInterceptor) {
                   return _request;
                 }
-              }).withInterceptor({
-                response: function response(_response) {
-                  console.log(_response);
 
-                  if (auth.isTokenAuthEnabled()) {
-                    auth.setTokensFromHeaders(_response.headers);
+                if (auth.isTokenAuthEnabled()) {
+                  authUtils.forEach(config.tokenNames, function (tokenName) {
+                    var value = storage.get(tokenName);
+                    _request.headers.append(tokenName, value);
+                  });
+                } else {
+                  var tokenName = config.tokenPrefix ? config.tokenPrefix + '_' + config.tokenName : config.tokenName;
+                  var token = storage.get(tokenName);
+
+                  if (config.authHeader && config.authToken) {
+                    token = config.authToken + ' ' + token;
                   }
 
-                  return _response;
-                },
-                responseError: function responseError(response) {
-                  if (auth.isTokenAuthEnabled() && auth.isAuthenticated() && response.status === 401) {
-                    authService.validateToken();
-                  }
-
-                  return response;
+                  _request.headers.append(config.authHeader, token);
                 }
-              });
-            });
+
+                return _request;
+              }
+            };
+          }
+        }, {
+          key: 'tokenAuthInterceptor',
+          get: function get() {
+            var auth = this.auth;
+
+            return {
+              response: function response(_response) {
+                auth.setTokensFromHeaders(_response.headers);
+
+                return _response;
+              },
+              responseError: function responseError(response) {
+                if (auth.isAuthenticated() && response.status === 401) {
+                  auth.validateToken();
+                }
+
+                return response;
+              }
+            };
           }
         }]);
 
         var _FetchConfig = FetchConfig;
-        FetchConfig = inject(HttpClient, Authentication, AuthService, Storage, BaseConfig)(FetchConfig) || FetchConfig;
+        FetchConfig = inject(HttpClient, Config, Authentication, Storage, BaseConfig)(FetchConfig) || FetchConfig;
         return FetchConfig;
       })();
 

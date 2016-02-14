@@ -1,15 +1,15 @@
-System.register(['aurelia-framework', './authentication', './baseConfig', './oAuth1', './oAuth2', './authUtils', 'aurelia-api'], function (_export) {
+System.register(['aurelia-dependency-injection', './authentication', './baseConfig', './oAuth1', './oAuth2', './authUtils'], function (_export) {
   'use strict';
 
-  var inject, Authentication, BaseConfig, OAuth1, OAuth2, authUtils, Rest, AuthService;
+  var inject, Authentication, BaseConfig, OAuth1, OAuth2, authUtils, AuthService;
 
   var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
 
   function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
 
   return {
-    setters: [function (_aureliaFramework) {
-      inject = _aureliaFramework.inject;
+    setters: [function (_aureliaDependencyInjection) {
+      inject = _aureliaDependencyInjection.inject;
     }, function (_authentication) {
       Authentication = _authentication.Authentication;
     }, function (_baseConfig) {
@@ -20,8 +20,6 @@ System.register(['aurelia-framework', './authentication', './baseConfig', './oAu
       OAuth2 = _oAuth2.OAuth2;
     }, function (_authUtils) {
       authUtils = _authUtils['default'];
-    }, function (_aureliaApi) {
-      Rest = _aureliaApi.Rest;
     }],
     execute: function () {
       AuthService = (function () {
@@ -31,30 +29,31 @@ System.register(['aurelia-framework', './authentication', './baseConfig', './oAu
           enumerable: true
         }]);
 
-        function AuthService(rest, auth, oAuth1, oAuth2, config) {
+        function AuthService(auth, oAuth1, oAuth2, config) {
           _classCallCheck(this, _AuthService);
 
-          this.rest = rest;
           this.auth = auth;
           this.oAuth1 = oAuth1;
           this.oAuth2 = oAuth2;
           this.config = config.current;
+          this.client = this.config.client;
         }
 
         _createClass(AuthService, [{
           key: 'getMe',
-          value: function getMe() {
-            return this.rest.find(this.auth.getProfileUrl());
-          }
-        }, {
-          key: 'updateMe',
-          value: function updateMe(body) {
-            var criteria = arguments.length <= 1 || arguments[1] === undefined ? null : arguments[1];
-
+          value: function getMe(criteria) {
             if (typeof criteria === 'string' || typeof criteria === 'number') {
               criteria = { id: criteria };
             }
-            return this.rest.update(this.auth.getProfileUrl(), criteria, body);
+            return this.client.find(this.auth.getProfileUrl(), criteria);
+          }
+        }, {
+          key: 'updateMe',
+          value: function updateMe(body, criteria) {
+            if (typeof criteria === 'string' || typeof criteria === 'number') {
+              criteria = { id: criteria };
+            }
+            return this.client.update(this.auth.getProfileUrl(), criteria, body);
           }
         }, {
           key: 'isAuthenticated',
@@ -88,7 +87,7 @@ System.register(['aurelia-framework', './authentication', './baseConfig', './oAu
                 'password': password
               };
             }
-            return this.rest.post(signupUrl, content).then(function (response) {
+            return this.client.post(signupUrl, content).then(function (response) {
               if (_this.config.loginOnSignup) {
                 _this.auth.setTokenFromResponse(response);
               } else if (_this.config.signupRedirect) {
@@ -114,7 +113,7 @@ System.register(['aurelia-framework', './authentication', './baseConfig', './oAu
               };
             }
 
-            return this.rest.post(loginUrl, content).then(function (response) {
+            return this.client.post(loginUrl, content).then(function (response) {
               if (!_this2.auth.isTokenAuthEnabled()) {
                 _this2.auth.setTokenFromResponse(response);
               } else {
@@ -136,7 +135,7 @@ System.register(['aurelia-framework', './authentication', './baseConfig', './oAu
 
             var url = this.auth.getValidateTokenUrl();
 
-            return this.rest.find(url).then(function (response) {
+            return this.client.find(url).then(function (response) {
               _this3.auth.__isAuthenticated = true;
               _this3.__tokenValidated = true;
               return _this3.auth.isAuthenticated();
@@ -168,15 +167,15 @@ System.register(['aurelia-framework', './authentication', './baseConfig', './oAu
             var unlinkUrl = this.config.baseUrl ? authUtils.joinUrl(this.config.baseUrl, this.config.unlinkUrl) : this.config.unlinkUrl;
 
             if (this.config.unlinkMethod === 'get') {
-              return this.rest.find(unlinkUrl + provider);
+              return this.client.find(unlinkUrl + provider);
             } else if (this.config.unlinkMethod === 'post') {
-              return this.rest.post(unlinkUrl, provider);
+              return this.client.post(unlinkUrl, provider);
             }
           }
         }]);
 
         var _AuthService = AuthService;
-        AuthService = inject(Rest, Authentication, OAuth1, OAuth2, BaseConfig)(AuthService) || AuthService;
+        AuthService = inject(Authentication, OAuth1, OAuth2, BaseConfig)(AuthService) || AuthService;
         return AuthService;
       })();
 

@@ -1,4 +1,4 @@
-System.register(['aurelia-framework', './baseConfig', './storage', './authUtils'], function (_export) {
+System.register(['aurelia-dependency-injection', './baseConfig', './storage', './authUtils'], function (_export) {
   'use strict';
 
   var inject, BaseConfig, Storage, authUtils, Authentication;
@@ -8,8 +8,8 @@ System.register(['aurelia-framework', './baseConfig', './storage', './authUtils'
   function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
 
   return {
-    setters: [function (_aureliaFramework) {
-      inject = _aureliaFramework.inject;
+    setters: [function (_aureliaDependencyInjection) {
+      inject = _aureliaDependencyInjection.inject;
     }, function (_baseConfig) {
       BaseConfig = _baseConfig.BaseConfig;
     }, function (_storage) {
@@ -30,9 +30,6 @@ System.register(['aurelia-framework', './baseConfig', './storage', './authUtils'
 
           this.storage = storage;
           this.config = config.current;
-          this.authMethod = this.config.authMethod;
-          this.tokenName = this.config.tokenPrefix ? this.config.tokenPrefix + '_' + this.config.tokenName : this.config.tokenName;
-          this.tokenNames = this.config.tokenNames;
         }
 
         _createClass(Authentication, [{
@@ -78,7 +75,12 @@ System.register(['aurelia-framework', './baseConfig', './storage', './authUtils'
             if (token && token.split('.').length === 3) {
               var base64Url = token.split('.')[1];
               var base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-              return JSON.parse(decodeURIComponent(escape(window.atob(base64))));
+
+              try {
+                return JSON.parse(decodeURIComponent(escape(window.atob(base64))));
+              } catch (error) {
+                return null;
+              }
             }
           }
         }, {
@@ -172,13 +174,13 @@ System.register(['aurelia-framework', './baseConfig', './storage', './authUtils'
 
             if (this.isTokenAuthEnabled()) {
               var authenticated = true;
-
               authUtils.forEach(this.tokenNames, function (name) {
                 var value = _this2.storage.get(name);
                 authenticated = authenticated && value && value !== 'null';
               });
 
               this.__isAuthenticated = authenticated;
+
               return authenticated;
             }
 
@@ -196,7 +198,13 @@ System.register(['aurelia-framework', './baseConfig', './storage', './authUtils'
 
             var base64Url = token.split('.')[1];
             var base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-            var exp = JSON.parse(window.atob(base64)).exp;
+            var exp = undefined;
+
+            try {
+              exp = JSON.parse(window.atob(base64)).exp;
+            } catch (error) {
+              return false;
+            }
 
             if (exp) {
               return Math.round(new Date().getTime() / 1000) <= exp;
@@ -223,6 +231,21 @@ System.register(['aurelia-framework', './baseConfig', './storage', './authUtils'
 
               resolve();
             });
+          }
+        }, {
+          key: 'authMethod',
+          get: function get() {
+            return this.config.authMethod;
+          }
+        }, {
+          key: 'tokenName',
+          get: function get() {
+            return this.config.tokenPrefix ? this.config.tokenPrefix + '_' + this.config.tokenName : this.config.tokenName;
+          }
+        }, {
+          key: 'tokenNames',
+          get: function get() {
+            return this.config.tokenNames;
           }
         }]);
 

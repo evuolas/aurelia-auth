@@ -18,7 +18,7 @@ var _authService = require('./authService');
 
 var _baseConfig = require('./baseConfig');
 
-var _aureliaFramework = require('aurelia-framework');
+var _aureliaDependencyInjection = require('aurelia-dependency-injection');
 
 var _storage = require('./storage');
 
@@ -26,73 +26,114 @@ var _authUtils = require('./authUtils');
 
 var _authUtils2 = _interopRequireDefault(_authUtils);
 
+var _spoonxAureliaApi = require('spoonx/aurelia-api');
+
 var FetchConfig = (function () {
-  function FetchConfig(httpClient, authentication, authService, storage, config) {
+  function FetchConfig(httpClient, clientConfig, authService, storage, config) {
     _classCallCheck(this, _FetchConfig);
 
     this.httpClient = httpClient;
-    this.auth = authentication;
-    this.authService = authService;
+    this.clientConfig = clientConfig;
+    this.auth = authService;
     this.storage = storage;
     this.config = config.current;
   }
 
   _createClass(FetchConfig, [{
     key: 'configure',
-    value: function configure() {
+    value: function configure(client) {
+      var _this = this;
+
+      if (Array.isArray(client)) {
+        var _ret = (function () {
+          var configuredClients = [];
+          client.forEach(function (toConfigure) {
+            configuredClients.push(_this.configure(toConfigure));
+          });
+
+          return {
+            v: configuredClients
+          };
+        })();
+
+        if (typeof _ret === 'object') return _ret.v;
+      }
+
+      if (typeof client === 'string') {
+        client = this.clientConfig.getEndpoint(client).client;
+      } else if (client instanceof _spoonxAureliaApi.Rest) {
+        client = client.client;
+      } else if (!(client instanceof _aureliaFetchClient.HttpClient)) {
+        client = this.httpClient;
+      }
+
+      client.configure(function (httpConfig) {
+        httpConfig.withBaseUrl(client.baseUrl).withInterceptor(_this.interceptor);
+
+        if (_this.auth.isTokenAuthEnabled()) {
+          httpConfig.withBaseUrl(client.baseUrl).withInterceptor(_this.tokenAuthInterceptor);
+        }
+      });
+
+      return client;
+    }
+  }, {
+    key: 'interceptor',
+    get: function get() {
       var auth = this.auth;
-      var authService = this.authService;
       var config = this.config;
       var storage = this.storage;
-      var baseUrl = this.httpClient.baseUrl;
 
-      this.httpClient.configure(function (httpConfig) {
-        httpConfig.withBaseUrl(baseUrl).withInterceptor({
-          request: function request(_request) {
-            if (auth.isAuthenticated() && config.httpInterceptor) {
-              if (auth.isTokenAuthEnabled()) {
-                _authUtils2['default'].forEach(config.tokenNames, function (tokenName) {
-                  var value = storage.get(tokenName);
-                  _request.headers.append(tokenName, value);
-                });
-              } else {
-                var tokenName = config.tokenPrefix ? config.tokenPrefix + '_' + config.tokenName : config.tokenName;
-                var token = storage.get(tokenName);
-
-                if (config.authHeader && config.authToken) {
-                  token = config.authToken + ' ' + token;
-                }
-
-                _request.headers.append(config.authHeader, token);
-              }
-            }
-
+      return {
+        request: function request(_request) {
+          if (!auth.isAuthenticated() || !config.httpInterceptor) {
             return _request;
           }
-        }).withInterceptor({
-          response: function response(_response) {
-            console.log(_response);
 
-            if (auth.isTokenAuthEnabled()) {
-              auth.setTokensFromHeaders(_response.headers);
+          if (auth.isTokenAuthEnabled()) {
+            _authUtils2['default'].forEach(config.tokenNames, function (tokenName) {
+              var value = storage.get(tokenName);
+              _request.headers.append(tokenName, value);
+            });
+          } else {
+            var tokenName = config.tokenPrefix ? config.tokenPrefix + '_' + config.tokenName : config.tokenName;
+            var token = storage.get(tokenName);
+
+            if (config.authHeader && config.authToken) {
+              token = config.authToken + ' ' + token;
             }
 
-            return _response;
-          },
-          responseError: function responseError(response) {
-            if (auth.isTokenAuthEnabled() && auth.isAuthenticated() && response.status === 401) {
-              authService.validateToken();
-            }
-
-            return response;
+            _request.headers.append(config.authHeader, token);
           }
-        });
-      });
+
+          return _request;
+        }
+      };
+    }
+  }, {
+    key: 'tokenAuthInterceptor',
+    get: function get() {
+      var auth = this.auth;
+
+      return {
+        response: function response(_response) {
+          auth.setTokensFromHeaders(_response.headers);
+
+          return _response;
+        },
+        responseError: function responseError(response) {
+          if (auth.isAuthenticated() && response.status === 401) {
+            auth.validateToken();
+          }
+
+          return response;
+        }
+      };
     }
   }]);
 
   var _FetchConfig = FetchConfig;
-  FetchConfig = (0, _aureliaFramework.inject)(_aureliaFetchClient.HttpClient, _authentication.Authentication, _authService.AuthService, _storage.Storage, _baseConfig.BaseConfig)(FetchConfig) || FetchConfig;
+  FetchConfig = (0, _aureliaDependencyInjection.inject)(_aureliaFetchClient.HttpClient, _spoonxAureliaApi.Config, _authentication.Authentication, _storage.Storage, _baseConfig.BaseConfig)(FetchConfig) || FetchConfig;
   return FetchConfig;
 })();
 

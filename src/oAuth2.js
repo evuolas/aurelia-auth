@@ -1,18 +1,17 @@
-import {inject} from 'aurelia-framework';
+import {inject} from 'aurelia-dependency-injection';
 import authUtils from './authUtils';
 import {Storage} from './storage';
 import {Popup} from './popup';
 import {BaseConfig} from './baseConfig';
-import {Rest} from 'aurelia-api';
 
-@inject(Storage, Popup, Rest, BaseConfig)
+@inject(Storage, Popup, BaseConfig)
 export class OAuth2 {
-  constructor(storage, popup, rest, config) {
-    this.storage  = storage;
-    this.config   = config.current;
-    this.popup    = popup;
-    this.rest     = rest;
-    this.defaults = {
+  constructor(storage, popup, config) {
+    this.storage      = storage;
+    this.config       = config.current;
+    this.client       = this.config.client;
+    this.popup        = popup;
+    this.defaults     = {
       url: null,
       name: null,
       state: null,
@@ -30,80 +29,77 @@ export class OAuth2 {
   }
 
   open(options, userData) {
-    authUtils.extend(this.defaults, options);
-    let stateName = this.defaults.name + '_state';
+    let current = authUtils.extend({}, this.defaults, options);
+    let stateName = current.name + '_state';
 
-    if (authUtils.isFunction(this.defaults.state)) {
-      this.storage.set(stateName, this.defaults.state());
-    } else if (authUtils.isString(this.defaults.state)) {
-      this.storage.set(stateName, this.defaults.state);
+    if (authUtils.isFunction(current.state)) {
+      this.storage.set(stateName, current.state());
+    } else if (authUtils.isString(current.state)) {
+      this.storage.set(stateName, current.state);
     }
 
-    let url = this.defaults.authorizationEndpoint + '?' + this.buildQueryString();
+    let url = current.authorizationEndpoint + '?' + this.buildQueryString(current);
 
     let openPopup;
     if (this.config.platform === 'mobile') {
-      openPopup = this.popup.open(url, this.defaults.name, this.defaults.popupOptions, this.defaults.redirectUri).eventListener(this.defaults.redirectUri);
+      openPopup = this.popup.open(url, current.name, current.popupOptions, current.redirectUri).eventListener(current.redirectUri);
     } else {
-      openPopup = this.popup.open(url, this.defaults.name, this.defaults.popupOptions, this.defaults.redirectUri).pollPopup();
+      openPopup = this.popup.open(url, current.name, current.popupOptions, current.redirectUri).pollPopup();
     }
 
-    let self = this;
     return openPopup
-      .then((oauthData) => {
-        if (self.defaults.responseType === 'token' ||
-          self.defaults.responseType === 'id_token%20token' ||
-          self.defaults.responseType === 'token%20id_token'
+      .then(oauthData => {
+        if (current.responseType === 'token' ||
+          current.responseType === 'id_token%20token' ||
+          current.responseType === 'token%20id_token'
         ) {
           return oauthData;
         }
-        if (oauthData.state && oauthData.state !== self.storage.get(stateName)) {
+        if (oauthData.state && oauthData.state !== this.storage.get(stateName)) {
           return Promise.reject('OAuth 2.0 state parameter mismatch.');
         }
-        return self.exchangeForToken(oauthData, userData);
+        return this.exchangeForToken(oauthData, userData, current);
       });
   }
 
-  exchangeForToken(oauthData, userData) {
+  exchangeForToken(oauthData, userData, current) {
     let data = authUtils.extend({}, userData, {
       code: oauthData.code,
-      clientId: this.defaults.clientId,
-      redirectUri: this.defaults.redirectUri
+      clientId: current.clientId,
+      redirectUri: current.redirectUri
     });
 
     if (oauthData.state) {
       data.state = oauthData.state;
     }
 
-    authUtils.forEach(this.defaults.responseParams, function(param) {
-      data[param] = oauthData[param];
-    });
+    authUtils.forEach(current.responseParams, param => data[param] = oauthData[param]);
 
-    let exchangeForTokenUrl = this.config.baseUrl ? authUtils.joinUrl(this.config.baseUrl, this.defaults.url) : this.defaults.url;
+    let exchangeForTokenUrl = this.config.baseUrl ? authUtils.joinUrl(this.config.baseUrl, current.url) : current.url;
     let credentials         = this.config.withCredentials ? 'include' : 'same-origin';
 
-    return this.rest.post(exchangeForTokenUrl, data, {credentials: credentials});
+    return this.client.post(exchangeForTokenUrl, data, {credentials: credentials});
   }
 
-  buildQueryString() {
+  buildQueryString(current) {
     let keyValuePairs = [];
     let urlParams     = ['defaultUrlParams', 'requiredUrlParams', 'optionalUrlParams'];
 
-    authUtils.forEach(urlParams, (params) => {
-      authUtils.forEach(this.defaults[params], (paramName) => {
+    authUtils.forEach(urlParams, params => {
+      authUtils.forEach(current[params], paramName => {
         let camelizedName = authUtils.camelCase(paramName);
-        let paramValue    = authUtils.isFunction(this.defaults[paramName]) ? this.defaults[paramName]() : this.defaults[camelizedName];
+        let paramValue    = authUtils.isFunction(current[paramName]) ? current[paramName]() : current[camelizedName];
 
         if (paramName === 'state') {
-          let stateName = this.defaults.name + '_state';
+          let stateName = current.name + '_state';
           paramValue    = encodeURIComponent(this.storage.get(stateName));
         }
 
         if (paramName === 'scope' && Array.isArray(paramValue)) {
-          paramValue = paramValue.join(this.defaults.scopeDelimiter);
+          paramValue = paramValue.join(current.scopeDelimiter);
 
-          if (this.defaults.scopePrefix) {
-            paramValue = [this.defaults.scopePrefix, paramValue].join(this.defaults.scopeDelimiter);
+          if (current.scopePrefix) {
+            paramValue = [current.scopePrefix, paramValue].join(current.scopeDelimiter);
           }
         }
 
@@ -111,9 +107,7 @@ export class OAuth2 {
       });
     });
 
-    return keyValuePairs.map(function(pair) {
-      return pair.join('=');
-    }).join('&');
+    return keyValuePairs.map(pair => pair.join('=')).join('&');
   }
 
 }

@@ -1,4 +1,4 @@
-define(['exports', './authUtils', './baseConfig', 'aurelia-framework'], function (exports, _authUtils, _baseConfig, _aureliaFramework) {
+define(['exports', './authUtils', './baseConfig', 'aurelia-dependency-injection'], function (exports, _authUtils, _baseConfig, _aureliaDependencyInjection) {
   'use strict';
 
   Object.defineProperty(exports, '__esModule', {
@@ -40,9 +40,10 @@ define(['exports', './authUtils', './baseConfig', 'aurelia-framework'], function
     }, {
       key: 'eventListener',
       value: function eventListener(redirectUri) {
-        var self = this;
+        var _this = this;
+
         var promise = new Promise(function (resolve, reject) {
-          self.popupWindow.addEventListener('loadstart', function (event) {
+          _this.popupWindow.addEventListener('loadstart', function (event) {
             if (event.url.indexOf(redirectUri) !== 0) {
               return;
             }
@@ -66,42 +67,41 @@ define(['exports', './authUtils', './baseConfig', 'aurelia-framework'], function
                 resolve(qs);
               }
 
-              self.popupWindow.close();
+              _this.popupWindow.close();
             }
           });
 
-          popupWindow.addEventListener('exit', function () {
+          _this.popupWindow.addEventListener('exit', function () {
             reject({
               data: 'Provider Popup was closed'
             });
           });
 
-          popupWindow.addEventListener('loaderror', function () {
+          _this.popupWindow.addEventListener('loaderror', function () {
             deferred.reject({
               data: 'Authorization Failed'
             });
           });
         });
+
         return promise;
       }
     }, {
       key: 'pollPopup',
       value: function pollPopup() {
-        var _this = this;
-
-        var self = this;
+        var _this2 = this;
 
         return new Promise(function (resolve, reject) {
-          _this.polling = setInterval(function () {
+          _this2.polling = setInterval(function () {
             var errorData = undefined;
 
             try {
               var documentOrigin = document.location.host;
-              var popupWindowOrigin = self.popupWindow.location.host;
+              var popupWindowOrigin = _this2.popupWindow.location.host;
 
-              if (popupWindowOrigin === documentOrigin && (self.popupWindow.location.search || self.popupWindow.location.hash)) {
-                var queryParams = self.popupWindow.location.search.substring(1).replace(/\/$/, '');
-                var hashParams = self.popupWindow.location.hash.substring(1).replace(/[\/$]/, '');
+              if (popupWindowOrigin === documentOrigin && (_this2.popupWindow.location.search || _this2.popupWindow.location.hash)) {
+                var queryParams = _this2.popupWindow.location.search.substring(1).replace(/\/$/, '');
+                var hashParams = _this2.popupWindow.location.hash.substring(1).replace(/[\/$]/, '');
                 var hash = _authUtils2['default'].parseQueryString(hashParams);
                 var qs = _authUtils2['default'].parseQueryString(queryParams);
 
@@ -115,21 +115,21 @@ define(['exports', './authUtils', './baseConfig', 'aurelia-framework'], function
                   resolve(qs);
                 }
 
-                self.popupWindow.close();
-                clearInterval(self.polling);
+                _this2.popupWindow.close();
+                clearInterval(_this2.polling);
               }
             } catch (error) {
               errorData = error;
             }
 
-            if (!self.popupWindow) {
-              clearInterval(self.polling);
+            if (!_this2.popupWindow) {
+              clearInterval(_this2.polling);
               reject({
                 error: errorData,
                 data: 'Provider Popup Blocked'
               });
-            } else if (self.popupWindow.closed) {
-              clearInterval(self.polling);
+            } else if (_this2.popupWindow.closed) {
+              clearInterval(_this2.polling);
               reject({
                 error: errorData,
                 data: 'Problem poll popup'
@@ -156,14 +156,14 @@ define(['exports', './authUtils', './baseConfig', 'aurelia-framework'], function
       value: function stringifyOptions(options) {
         var parts = [];
         _authUtils2['default'].forEach(options, function (value, key) {
-          parts.push(key + '=' + value);
+          return parts.push(key + '=' + value);
         });
         return parts.join(',');
       }
     }]);
 
     var _Popup = Popup;
-    Popup = (0, _aureliaFramework.inject)(_baseConfig.BaseConfig)(Popup) || Popup;
+    Popup = (0, _aureliaDependencyInjection.inject)(_baseConfig.BaseConfig)(Popup) || Popup;
     return Popup;
   })();
 

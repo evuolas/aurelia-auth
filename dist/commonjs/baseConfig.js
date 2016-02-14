@@ -32,6 +32,9 @@ var BaseConfig = (function () {
 
     this._current = {
       authMethod: 'jwt',
+      endpoint: null,
+      configureEndpoints: null,
+      client: null,
       httpInterceptor: true,
       loginOnSignup: true,
       baseUrl: null,
