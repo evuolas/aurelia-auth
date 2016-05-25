@@ -32,13 +32,13 @@ export class AuthService {
   }
 
   isAuthenticated() {
-    let autheticated = this.auth.isAuthenticated();
+    let authenticated = this.auth.isAuthenticated();
 
     if (authenticated && this.auth.isTokenAuthEnabled() && !this.__tokenValidated) {
       return this.validateToken();
     }
 
-    return autheticated;
+    return authenticated;
   }
 
   getTokenPayload() {

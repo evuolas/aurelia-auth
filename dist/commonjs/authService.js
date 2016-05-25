@@ -60,13 +60,13 @@ var AuthService = (function () {
   }, {
     key: 'isAuthenticated',
     value: function isAuthenticated() {
-      var autheticated = this.auth.isAuthenticated();
+      var authenticated = this.auth.isAuthenticated();
 
       if (authenticated && this.auth.isTokenAuthEnabled() && !this.__tokenValidated) {
         return this.validateToken();
       }
 
-      return autheticated;
+      return authenticated;
     }
   }, {
     key: 'getTokenPayload',
