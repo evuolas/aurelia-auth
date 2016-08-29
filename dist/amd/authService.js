@@ -129,7 +129,11 @@ define(['exports', 'aurelia-dependency-injection', './authentication', './baseCo
         return this.client.find(url).then(function (response) {
           _this3.auth.__isAuthenticated = true;
           _this3.__tokenValidated = true;
-          return _this3.auth.isAuthenticated();
+
+          var authenticated = _this3.auth.isAuthenticated();
+          if (!authenticated) return Promise.reject();
+
+          return response.data;
         })['catch'](function (err) {
           console.log(err);
           _this3.auth.removeTokens();

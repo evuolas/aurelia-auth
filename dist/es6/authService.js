@@ -104,7 +104,11 @@ export class AuthService {
       .then(response => {
         this.auth.__isAuthenticated = true;
         this.__tokenValidated = true;
-        return this.auth.isAuthenticated();
+
+        const authenticated = this.auth.isAuthenticated();
+        if (!authenticated) return Promise.reject();
+
+        return response.data;
       })
       .catch(err => {
         console.log(err);
