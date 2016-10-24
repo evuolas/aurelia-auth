@@ -94,6 +94,13 @@ System.register(['aurelia-fetch-client', './authentication', './authService', '.
                     var value = storage.get(tokenName);
                     _request.headers.append(tokenName, value);
                   });
+
+                  var accessToken = storage.get('access-token');
+                  var tokenType = storage.get('token-type');
+
+                  if (config.authHeader && accessToken && tokenType) {
+                    _request.headers.append(config.authHeader, tokenType + ' ' + accessToken);
+                  }
                 } else {
                   var tokenName = config.tokenPrefix ? config.tokenPrefix + '_' + config.tokenName : config.tokenName;
                   var token = storage.get(tokenName);

@@ -1,6 +1,5 @@
 import {HttpClient} from 'aurelia-fetch-client';
 import {Authentication} from './authentication';
-import {AuthService} from './authService';
 import {BaseConfig} from './baseConfig';
 import {inject} from 'aurelia-dependency-injection';
 import {Storage} from './storage';
@@ -49,6 +48,12 @@ export class FetchConfig {
             request.headers.append(tokenName, value);
           });
 
+          const accessToken = storage.get('access-token');
+          const tokenType = storage.get('token-type');
+
+          if (config.authHeader && accessToken && tokenType) {
+            request.headers.append(config.authHeader, `${tokenType} ${accessToken}`);
+          }
         } else {
           let tokenName = config.tokenPrefix ? `${config.tokenPrefix}_${config.tokenName}` : config.tokenName;
           let token     = storage.get(tokenName);
@@ -81,7 +86,7 @@ export class FetchConfig {
 
         return response;
       }
-    }
+    };
   }
 
   /**

@@ -21,7 +21,7 @@ declare module 'aurelia-auth/authUtils' {
 declare module 'aurelia-auth/baseConfig' {
 	export class BaseConfig {
 	    configure(incomingConfig: any): void;
-	    current: any;
+	    readonly current: any;
 	    constructor();
 	}
 
@@ -39,9 +39,9 @@ declare module 'aurelia-auth/authentication' {
 	export class Authentication {
 	    static __isAuthenticated: boolean;
 	    constructor(storage: any, config: any);
-	    authMethod: any;
-	    tokenName: any;
-	    tokenNames: any;
+	    readonly authMethod: any;
+	    readonly tokenName: any;
+	    readonly tokenNames: any;
 	    getLoginRoute(): any;
 	    getLoginRedirect(): any;
 	    getLoginUrl(): any;
@@ -125,10 +125,10 @@ declare module 'aurelia-auth/app.fetch-httpClient.config' {
 	     *
 	     * @return {{request: Function}}
 	     */
-	    interceptor: {
+	    readonly interceptor: {
 	        request(request: any): any;
 	    };
-	    tokenAuthInterceptor: {
+	    readonly tokenAuthInterceptor: {
 	        response(response: any): any;
 	        responseError(response: any): any;
 	    };

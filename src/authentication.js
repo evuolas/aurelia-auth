@@ -103,7 +103,7 @@ export class Authentication {
     let tokenNames = this.tokenNames;
 
     if (authUtils.isArray(tokenNames)) {
-      for (var i = 0; i < tokenNames.length; i++) {
+      for (let i = 0; i < tokenNames.length; i++) {
         let key = tokenNames[i];
         let value = headers.get(key);
 
@@ -144,9 +144,9 @@ export class Authentication {
 
   isAuthenticated() {
     if (this.isTokenAuthEnabled()) {
-      var authenticated = true;
+      let authenticated = true;
       authUtils.forEach(this.tokenNames, name => {
-        var value = this.storage.get(name);
+        let value = this.storage.get(name);
         authenticated = (authenticated && value && value !== 'null');
       });
 
@@ -192,7 +192,7 @@ export class Authentication {
       if (this.isTokenAuthEnabled()) {
         authUtils.forEach(this.tokenNames, name => {
           this.storage.remove(name);
-        })
+        });
       } else {
         this.storage.remove(this.tokenName);
       }
