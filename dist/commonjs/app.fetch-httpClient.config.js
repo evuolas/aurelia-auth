@@ -14,8 +14,6 @@ var _aureliaFetchClient = require('aurelia-fetch-client');
 
 var _authentication = require('./authentication');
 
-var _authService = require('./authService');
-
 var _baseConfig = require('./baseConfig');
 
 var _aureliaDependencyInjection = require('aurelia-dependency-injection');

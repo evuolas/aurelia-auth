@@ -173,15 +173,21 @@ System.register(['aurelia-dependency-injection', './baseConfig', './storage', '.
             var _this2 = this;
 
             if (this.isTokenAuthEnabled()) {
-              var authenticated = true;
-              authUtils.forEach(this.tokenNames, function (name) {
-                var value = _this2.storage.get(name);
-                authenticated = authenticated && value && value !== 'null';
-              });
+              var _ret = (function () {
+                var authenticated = true;
+                authUtils.forEach(_this2.tokenNames, function (name) {
+                  var value = _this2.storage.get(name);
+                  authenticated = authenticated && value && value !== 'null';
+                });
 
-              this.__isAuthenticated = authenticated;
+                _this2.__isAuthenticated = authenticated;
 
-              return authenticated;
+                return {
+                  v: authenticated
+                };
+              })();
+
+              if (typeof _ret === 'object') return _ret.v;
             }
 
             var token = this.storage.get(this.tokenName);

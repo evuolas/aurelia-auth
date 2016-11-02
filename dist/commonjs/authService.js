@@ -146,10 +146,11 @@ var AuthService = (function () {
 
         return response.data;
       })['catch'](function (err) {
-        console.log(err);
         _this3.auth.removeTokens();
         _this3.auth.__isAuthenticated = false;
         _this3.auth.redirectAfterLogout();
+
+        return Promise.reject();
       });
     }
   }, {

@@ -111,10 +111,11 @@ export class AuthService {
         return response.data;
       })
       .catch(err => {
-        console.log(err);
         this.auth.removeTokens();
         this.auth.__isAuthenticated = false;
         this.auth.redirectAfterLogout();
+
+        return Promise.reject();
       });
   }
 

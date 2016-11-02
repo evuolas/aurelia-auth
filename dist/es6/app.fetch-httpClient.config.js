@@ -1,6 +1,5 @@
 import {HttpClient} from 'aurelia-fetch-client';
 import {Authentication} from './authentication';
-import {AuthService} from './authService';
 import {BaseConfig} from './baseConfig';
 import {inject} from 'aurelia-dependency-injection';
 import {Storage} from './storage';
@@ -87,7 +86,7 @@ export class FetchConfig {
 
         return response;
       }
-    }
+    };
   }
 
   /**

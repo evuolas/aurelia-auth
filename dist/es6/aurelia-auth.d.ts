@@ -62,52 +62,6 @@ declare module 'aurelia-auth/authentication' {
 	}
 
 }
-declare module 'aurelia-auth/popup' {
-	export class Popup {
-	    constructor(config: any);
-	    open(url: any, windowName: any, options: any, redirectUri: any): this;
-	    eventListener(redirectUri: any): any;
-	    pollPopup(): any;
-	    prepareOptions(options: any): any;
-	    stringifyOptions(options: any): string;
-	}
-
-}
-declare module 'aurelia-auth/oAuth1' {
-	export class OAuth1 {
-	    constructor(storage: any, popup: any, config: any);
-	    open(options: any, userData: any): any;
-	    exchangeForToken(oauthData: any, userData: any, current: any): any;
-	    buildQueryString(obj: any): string;
-	}
-
-}
-declare module 'aurelia-auth/oAuth2' {
-	export class OAuth2 {
-	    constructor(storage: any, popup: any, config: any);
-	    open(options: any, userData: any): any;
-	    exchangeForToken(oauthData: any, userData: any, current: any): any;
-	    buildQueryString(current: any): string;
-	}
-
-}
-declare module 'aurelia-auth/authService' {
-	export class AuthService {
-	    static __tokenValidated: boolean;
-	    constructor(auth: any, oAuth1: any, oAuth2: any, config: any);
-	    getMe(criteria: any): any;
-	    updateMe(body: any, criteria: any): any;
-	    isAuthenticated(): any;
-	    getTokenPayload(): any;
-	    signup(displayName: any, email: any, password: any): any;
-	    login(email: any, password: any): any;
-	    logout(redirectUri: any): any;
-	    validateToken(): any;
-	    authenticate(name: any, redirect: any, userData: any): any;
-	    unlink(provider: any): any;
-	}
-
-}
 declare module 'aurelia-auth/app.fetch-httpClient.config' {
 	export class FetchConfig {
 	    /**
@@ -151,6 +105,52 @@ declare module 'aurelia-auth/authorizeStep' {
 	export class AuthorizeStep {
 	    constructor(auth: any);
 	    run(routingContext: any, next: any): any;
+	}
+
+}
+declare module 'aurelia-auth/popup' {
+	export class Popup {
+	    constructor(config: any);
+	    open(url: any, windowName: any, options: any, redirectUri: any): this;
+	    eventListener(redirectUri: any): any;
+	    pollPopup(): any;
+	    prepareOptions(options: any): any;
+	    stringifyOptions(options: any): string;
+	}
+
+}
+declare module 'aurelia-auth/oAuth1' {
+	export class OAuth1 {
+	    constructor(storage: any, popup: any, config: any);
+	    open(options: any, userData: any): any;
+	    exchangeForToken(oauthData: any, userData: any, current: any): any;
+	    buildQueryString(obj: any): string;
+	}
+
+}
+declare module 'aurelia-auth/oAuth2' {
+	export class OAuth2 {
+	    constructor(storage: any, popup: any, config: any);
+	    open(options: any, userData: any): any;
+	    exchangeForToken(oauthData: any, userData: any, current: any): any;
+	    buildQueryString(current: any): string;
+	}
+
+}
+declare module 'aurelia-auth/authService' {
+	export class AuthService {
+	    static __tokenValidated: boolean;
+	    constructor(auth: any, oAuth1: any, oAuth2: any, config: any);
+	    getMe(criteria: any): any;
+	    updateMe(body: any, criteria: any): any;
+	    isAuthenticated(): any;
+	    getTokenPayload(): any;
+	    signup(displayName: any, email: any, password: any): any;
+	    login(email: any, password: any): any;
+	    logout(redirectUri: any): any;
+	    validateToken(): any;
+	    authenticate(name: any, redirect: any, userData: any): any;
+	    unlink(provider: any): any;
 	}
 
 }
