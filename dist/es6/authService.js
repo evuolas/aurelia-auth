@@ -57,7 +57,7 @@ export class AuthService {
         'password': password
       };
     }
-    return this.client.post(signupUrl, content)
+    return this.client.post(signupUrl, null, content)
       .then(response => {
         if (this.config.loginOnSignup) {
           this.auth.setTokenFromResponse(response);
@@ -81,7 +81,7 @@ export class AuthService {
       };
     }
 
-    return this.client.post(loginUrl, content)
+    return this.client.post(loginUrl, null, content)
       .then(response => {
         if (!this.auth.isTokenAuthEnabled()) {
           this.auth.setTokenFromResponse(response);
@@ -138,7 +138,7 @@ export class AuthService {
     if (this.config.unlinkMethod === 'get') {
       return this.client.find(unlinkUrl + provider);
     } else if (this.config.unlinkMethod === 'post') {
-      return this.client.post(unlinkUrl, provider);
+      return this.client.post(unlinkUrl, null, provider);
     }
   }
 }

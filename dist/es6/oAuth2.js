@@ -78,7 +78,7 @@ export class OAuth2 {
     let exchangeForTokenUrl = this.config.baseUrl ? authUtils.joinUrl(this.config.baseUrl, current.url) : current.url;
     let credentials         = this.config.withCredentials ? 'include' : 'same-origin';
 
-    return this.client.post(exchangeForTokenUrl, data, {credentials: credentials});
+    return this.client.post(exchangeForTokenUrl, null, data, {credentials: credentials});
   }
 
   buildQueryString(current) {

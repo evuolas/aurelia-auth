@@ -89,7 +89,7 @@ var AuthService = (function () {
           'password': password
         };
       }
-      return this.client.post(signupUrl, content).then(function (response) {
+      return this.client.post(signupUrl, null, content).then(function (response) {
         if (_this.config.loginOnSignup) {
           _this.auth.setTokenFromResponse(response);
         } else if (_this.config.signupRedirect) {
@@ -115,7 +115,7 @@ var AuthService = (function () {
         };
       }
 
-      return this.client.post(loginUrl, content).then(function (response) {
+      return this.client.post(loginUrl, null, content).then(function (response) {
         if (!_this2.auth.isTokenAuthEnabled()) {
           _this2.auth.setTokenFromResponse(response);
         } else {
@@ -176,7 +176,7 @@ var AuthService = (function () {
       if (this.config.unlinkMethod === 'get') {
         return this.client.find(unlinkUrl + provider);
       } else if (this.config.unlinkMethod === 'post') {
-        return this.client.post(unlinkUrl, provider);
+        return this.client.post(unlinkUrl, null, provider);
       }
     }
   }]);

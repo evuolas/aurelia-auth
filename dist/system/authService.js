@@ -87,7 +87,7 @@ System.register(['aurelia-dependency-injection', './authentication', './baseConf
                 'password': password
               };
             }
-            return this.client.post(signupUrl, content).then(function (response) {
+            return this.client.post(signupUrl, null, content).then(function (response) {
               if (_this.config.loginOnSignup) {
                 _this.auth.setTokenFromResponse(response);
               } else if (_this.config.signupRedirect) {
@@ -113,7 +113,7 @@ System.register(['aurelia-dependency-injection', './authentication', './baseConf
               };
             }
 
-            return this.client.post(loginUrl, content).then(function (response) {
+            return this.client.post(loginUrl, null, content).then(function (response) {
               if (!_this2.auth.isTokenAuthEnabled()) {
                 _this2.auth.setTokenFromResponse(response);
               } else {
@@ -174,7 +174,7 @@ System.register(['aurelia-dependency-injection', './authentication', './baseConf
             if (this.config.unlinkMethod === 'get') {
               return this.client.find(unlinkUrl + provider);
             } else if (this.config.unlinkMethod === 'post') {
-              return this.client.post(unlinkUrl, provider);
+              return this.client.post(unlinkUrl, null, provider);
             }
           }
         }]);
