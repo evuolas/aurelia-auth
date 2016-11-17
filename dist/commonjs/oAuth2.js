@@ -100,7 +100,7 @@ var OAuth2 = (function () {
       var exchangeForTokenUrl = this.config.baseUrl ? _authUtils2['default'].joinUrl(this.config.baseUrl, current.url) : current.url;
       var credentials = this.config.withCredentials ? 'include' : 'same-origin';
 
-      return this.client.post(exchangeForTokenUrl, null, data, { credentials: credentials });
+      return this.client.post(exchangeForTokenUrl, data, { credentials: credentials });
     }
   }, {
     key: 'buildQueryString',
