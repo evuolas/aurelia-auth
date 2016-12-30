@@ -28,6 +28,7 @@ define(['exports', 'aurelia-dependency-injection', './authentication', './baseCo
       this.oAuth2 = oAuth2;
       this.config = config.current;
       this.client = this.config.client;
+      this.data = {};
     }
 
     _createClass(AuthService, [{
@@ -117,12 +118,18 @@ define(['exports', 'aurelia-dependency-injection', './authentication', './baseCo
     }, {
       key: 'logout',
       value: function logout(redirectUri) {
+        this.data = {};
+
         return this.auth.logout(redirectUri);
       }
     }, {
       key: 'validateToken',
       value: function validateToken() {
         var _this3 = this;
+
+        if (this.__tokenValidated) {
+          return Promise.resolve(this.data);
+        }
 
         var url = this.auth.getValidateTokenUrl();
 
@@ -133,11 +140,14 @@ define(['exports', 'aurelia-dependency-injection', './authentication', './baseCo
           var authenticated = _this3.auth.isAuthenticated();
           if (!authenticated) return Promise.reject();
 
+          _this3.data = response.data;
+
           return response.data;
         })['catch'](function (err) {
           _this3.auth.removeTokens();
           _this3.auth.__isAuthenticated = false;
           _this3.auth.redirectAfterLogout();
+          _this3.data = {};
 
           return Promise.reject();
         });
