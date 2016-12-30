@@ -15,6 +15,7 @@ export class AuthService {
     this.oAuth2 = oAuth2;
     this.config = config.current;
     this.client = this.config.client;
+    this.data = {};
   }
 
   getMe(criteria) {
@@ -94,10 +95,16 @@ export class AuthService {
   }
 
   logout(redirectUri) {
+    this.data = {};
+
     return this.auth.logout(redirectUri);
   }
 
   validateToken() {
+    if (this.__tokenValidated) {
+      return Promise.resolve(this.data);
+    }
+
     let url = this.auth.getValidateTokenUrl();
 
     return this.client.find(url)
@@ -108,12 +115,15 @@ export class AuthService {
         const authenticated = this.auth.isAuthenticated();
         if (!authenticated) return Promise.reject();
 
+        this.data = response.data;
+
         return response.data;
       })
       .catch(err => {
         this.auth.removeTokens();
         this.auth.__isAuthenticated = false;
         this.auth.redirectAfterLogout();
+        this.data = {};
 
         return Promise.reject();
       });
