@@ -1,4 +1,4 @@
-define(['exports', 'aurelia-dependency-injection', './baseConfig'], function (exports, _aureliaDependencyInjection, _baseConfig) {
+define(['exports', 'aurelia-dependency-injection', 'aurelia-plugins-cookies', './baseConfig'], function (exports, _aureliaDependencyInjection, _aureliaPluginsCookies, _baseConfig) {
   'use strict';
 
   Object.defineProperty(exports, '__esModule', {
@@ -19,29 +19,57 @@ define(['exports', 'aurelia-dependency-injection', './baseConfig'], function (ex
     _createClass(Storage, [{
       key: 'get',
       value: function get(key) {
-        var storageKey = this.config.storage;
-
-        if (window[storageKey]) {
-          return window[storageKey].getItem(key);
+        if (this.checkStorageAvailability()) {
+          return this.getStorage().getItem(key);
         }
+
+        return _aureliaPluginsCookies.Cookies.get(key);
       }
     }, {
       key: 'set',
       value: function set(key, value) {
-        var storageKey = this.config.storage;
-
-        if (window[storageKey]) {
-          return window[storageKey].setItem(key, value);
+        if (this.checkStorageAvailability()) {
+          return this.getStorage().setItem(key, value);
         }
+
+        return _aureliaPluginsCookies.Cookies.put(key, value);
       }
     }, {
       key: 'remove',
       value: function remove(key) {
-        var storageKey = this.config.storage;
-
-        if (window[storageKey]) {
-          return window[storageKey].removeItem(key);
+        if (this.checkStorageAvailability()) {
+          return this.getStorage().removeItem(key);
         }
+
+        return _aureliaPluginsCookies.Cookies.remove(key);
+      }
+    }, {
+      key: 'checkStorageAvailability',
+      value: function checkStorageAvailability() {
+        if (this.storageAvailabilityChecked) {
+          return this.storageAvailable;
+        }
+
+        try {
+          var storage = this.getStorage();
+          var x = '__storage_test__';
+
+          storage.setItem(x, x);
+          storage.removeItem(x);
+
+          this.storageAvailable = true;
+        } catch (e) {
+          this.storageAvailable = false;
+        }
+
+        this.storageAvailabilityChecked = true;
+
+        return this.storageAvailable;
+      }
+    }, {
+      key: 'getStorage',
+      value: function getStorage() {
+        return window[this.config.storage];
       }
     }]);
 

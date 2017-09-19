@@ -32,6 +32,8 @@ declare module 'aurelia-auth/storage' {
 	    get(key: any): any;
 	    set(key: any, value: any): any;
 	    remove(key: any): any;
+	    checkStorageAvailability(): any;
+	    getStorage(): Window;
 	}
 
 }

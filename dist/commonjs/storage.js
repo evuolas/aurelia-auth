@@ -10,6 +10,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
 var _aureliaDependencyInjection = require('aurelia-dependency-injection');
 
+var _aureliaPluginsCookies = require('aurelia-plugins-cookies');
+
 var _baseConfig = require('./baseConfig');
 
 var Storage = (function () {
@@ -22,29 +24,57 @@ var Storage = (function () {
   _createClass(Storage, [{
     key: 'get',
     value: function get(key) {
-      var storageKey = this.config.storage;
-
-      if (window[storageKey]) {
-        return window[storageKey].getItem(key);
+      if (this.checkStorageAvailability()) {
+        return this.getStorage().getItem(key);
       }
+
+      return _aureliaPluginsCookies.Cookies.get(key);
     }
   }, {
     key: 'set',
     value: function set(key, value) {
-      var storageKey = this.config.storage;
-
-      if (window[storageKey]) {
-        return window[storageKey].setItem(key, value);
+      if (this.checkStorageAvailability()) {
+        return this.getStorage().setItem(key, value);
       }
+
+      return _aureliaPluginsCookies.Cookies.put(key, value);
     }
   }, {
     key: 'remove',
     value: function remove(key) {
-      var storageKey = this.config.storage;
-
-      if (window[storageKey]) {
-        return window[storageKey].removeItem(key);
+      if (this.checkStorageAvailability()) {
+        return this.getStorage().removeItem(key);
       }
+
+      return _aureliaPluginsCookies.Cookies.remove(key);
+    }
+  }, {
+    key: 'checkStorageAvailability',
+    value: function checkStorageAvailability() {
+      if (this.storageAvailabilityChecked) {
+        return this.storageAvailable;
+      }
+
+      try {
+        var storage = this.getStorage();
+        var x = '__storage_test__';
+
+        storage.setItem(x, x);
+        storage.removeItem(x);
+
+        this.storageAvailable = true;
+      } catch (e) {
+        this.storageAvailable = false;
+      }
+
+      this.storageAvailabilityChecked = true;
+
+      return this.storageAvailable;
+    }
+  }, {
+    key: 'getStorage',
+    value: function getStorage() {
+      return window[this.config.storage];
     }
   }]);
 
