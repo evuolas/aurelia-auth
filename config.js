@@ -18,6 +18,7 @@ System.config({
     "aurelia-dependency-injection": "npm:aurelia-dependency-injection@1.0.0-beta.1.1.3",
     "aurelia-fetch-client": "npm:aurelia-fetch-client@1.0.0-beta.1.1.0",
     "aurelia-pal-browser": "npm:aurelia-pal-browser@1.0.0-beta.1.1.3",
+    "aurelia-plugins-cookies": "npm:aurelia-plugins-cookies@2.5.1",
     "aurelia-router": "npm:aurelia-router@1.0.0-beta.1.1.1",
     "babel": "npm:babel-core@5.8.35",
     "babel-runtime": "npm:babel-runtime@5.8.35",
